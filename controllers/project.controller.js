@@ -14,7 +14,17 @@ exports.getLocationsForProjectHandler = async (req, res) => {
     if (!project)
       return res.status(404).json({ error: "Project doesn't exist!" });
 
-    const locations = await getLocationsForProject(project_id);
+    let filter = {};
+    filter.project_id = project_id;
+    if (req.query.name) {
+      filter.name = sequelize.where(
+        sequelize.fn("LOWER", sequelize.col("name")),
+        "LIKE",
+        "%" + req.query.name.toLowerCase() + "%"
+      );
+    }
+
+    const locations = await getLocationsForProject(filter);
 
     res.json({ locations });
   } catch (e) {

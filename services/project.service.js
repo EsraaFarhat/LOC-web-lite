@@ -9,9 +9,9 @@ exports.findProjectById = async (id) => {
   }
 };
 
-exports.getProjectsForGlobalIdentifier = async (gid) => {
+exports.getProjectsForGlobalIdentifier = async (filter) => {
   try {
-    const projects = await Project.findAll({ where: { gid } });
+    const projects = await Project.findAll({ where: filter });
     return projects;
   } catch (e) {
     throw new Error(e.message);

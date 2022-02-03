@@ -9,9 +9,9 @@ exports.findLocationById = async (id) => {
   }
 };
 
-exports.getLocationsForProject = async (project_id) => {
+exports.getLocationsForProject = async (filter) => {
   try {
-    const locations = await Location.findAll({ where: { project_id } });
+    const locations = await Location.findAll({ where: filter });
     return locations;
   } catch (e) {
     throw new Error(e.message);

@@ -11,7 +11,16 @@ const {
 
 exports.getAllGlobalIdentifiersHandler = async (req, res) => {
   try {
-    const globalIdentifiers = await getAllGlobalIdentifiers();
+    let filter = {};
+    if (req.query.name) {
+      filter.name = sequelize.where(
+        sequelize.fn("LOWER", sequelize.col("name")),
+        "LIKE",
+        "%" + req.query.name.toLowerCase() + "%"
+      );
+    }
+
+    const globalIdentifiers = await getAllGlobalIdentifiers(filter);
     res.json({ globalIdentifiers });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -33,7 +42,17 @@ exports.getProjectsForGlobalIdentifierHandler = async (req, res) => {
         .status(404)
         .json({ error: "Global Identifier doesn't exist!" });
 
-    const projects = await getProjectsForGlobalIdentifier(gid);
+    let filter = {};
+    filter.gid = gid;
+    if (req.query.name) {
+      filter.name = sequelize.where(
+        sequelize.fn("LOWER", sequelize.col("name")),
+        "LIKE",
+        "%" + req.query.name.toLowerCase() + "%"
+      );
+    }
+
+    const projects = await getProjectsForGlobalIdentifier(filter);
 
     res.json({ projects });
   } catch (e) {

@@ -1,9 +1,11 @@
 const GlobalIdentifier = require("../models/globalidentifier");
 
 
-exports.getAllGlobalIdentifiers = async () => {
+exports.getAllGlobalIdentifiers = async (filter) => {
   try {
-    const globalIdentifiers = await GlobalIdentifier.findAll();
+    const globalIdentifiers = await GlobalIdentifier.findAll({
+      where: filter,
+    });
     return globalIdentifiers;
   } catch (e) {
     throw new Error(e.message);
