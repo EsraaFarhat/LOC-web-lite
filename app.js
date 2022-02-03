@@ -35,8 +35,8 @@ process
     process.exit(1);
   });
 
-// if (!process.env.PRIVATE_KEY) {
-//   throw new Error("FATAL ERROR: jwtPrivateKey is not defined.");
-// }
+if (!process.env.PRIVATE_KEY) {
+  throw new Error("FATAL ERROR: jwtPrivateKey is not defined.");
+}
 
 module.exports = app;

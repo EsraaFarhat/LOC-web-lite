@@ -12,6 +12,6 @@ const router = express.Router();
 router.get("/", auth, getAllGlobalIdentifiersHandler);
 
 // Get all projects belong to a global identifier
-// router.get("/:gid/projects", auth, getProjectsForGlobalIdentifierHandler);
+router.get("/:gid/projects", auth, getProjectsForGlobalIdentifierHandler);
 
 module.exports = router;
