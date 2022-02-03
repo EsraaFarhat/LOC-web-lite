@@ -4,6 +4,7 @@ require("dotenv").config();
 
 const authRouter = require("./routes/auth");
 const globalIdentifierRouter = require("./routes/globalIdentifier");
+const projectRouter = require("./routes/project");
 const error = require("./middleware/error");
 
 
@@ -22,6 +23,7 @@ app.use(cors());
 
 app.use("/api/auth", authRouter);
 app.use("/api/globalIdentifiers", globalIdentifierRouter);
+app.use("/api/projects", projectRouter);
 
 app.use(error);
 

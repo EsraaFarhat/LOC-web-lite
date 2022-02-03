@@ -5,9 +5,9 @@ const {
   findGlobalIdentifierById,
 } = require("../services/globalIdentifier.service");
 
-// const {
-//   getProjectsForGlobalIdentifier,
-// } = require("../services/project.service");
+const {
+  getProjectsForGlobalIdentifier,
+} = require("../services/project.service");
 
 exports.getAllGlobalIdentifiersHandler = async (req, res) => {
   try {
