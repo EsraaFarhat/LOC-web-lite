@@ -2,7 +2,14 @@ const cors = require("cors");
 const express = require("express");
 require("dotenv").config();
 
-const db = require('./db');
+require("./models/user")
+require("./models/globalidentifier")
+require("./models/project")
+require("./models/location")
+require("./models/LOC")
+require("./models/LOC_destination")
+require("./models/log")
+require("./models/user_log_gid")
 
 const app = express();
 
