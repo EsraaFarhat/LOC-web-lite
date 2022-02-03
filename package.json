@@ -1,0 +1,19 @@
+{
+  "name": "loc-web-lite",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EsraaFarhat/LOC-web-lite.git"
+  },
+  "author": "Esraa Farhat",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/EsraaFarhat/LOC-web-lite/issues"
+  },
+  "homepage": "https://github.com/EsraaFarhat/LOC-web-lite#readme"
+}
