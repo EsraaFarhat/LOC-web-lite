@@ -1,7 +1,7 @@
 const { DataTypes, Model } = require("sequelize");
 const bcrypt = require("bcrypt");
 
-const sequelize = require("../db");
+const sequelize = require("../db/postgres/db");
 const LOC = require("./LOC");
 
 class User extends Model {

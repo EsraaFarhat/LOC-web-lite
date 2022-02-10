@@ -1,5 +1,5 @@
 const { DataTypes, Model } = require("sequelize");
-const sequelize = require("../db");
+const sequelize = require("../db/postgres/db");
 const GlobalIdentifier = require("./globalidentifier");
 
 class Project extends Model {}

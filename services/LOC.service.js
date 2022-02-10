@@ -42,25 +42,25 @@ exports.createLOCDestination = async (destinationRequest, loc_id) => {
 
 exports.validateLOC = (loc) => {
   const schema = Joi.object({
-    route_id: Joi.string().max(100).required(),
-    origin: Joi.string().max(100).required(),
-    field_1: Joi.string().max(200).required(),
-    field_2: Joi.string().max(200).required(),
-    field_3: Joi.string().max(200).required(),
-    MISC: Joi.string().max(100).required(),
-    LOC_type: Joi.string().valid("single", "dual").required(),
-    cable_status: Joi.string().valid("assigned", "unassigned"),
-    location_id: Joi.string().required(),
+    route_id: Joi.string().trim().max(100).required(),
+    origin: Joi.string().trim().max(100).required(),
+    field_1: Joi.string().trim().max(200).required(),
+    field_2: Joi.string().trim().max(200).required(),
+    field_3: Joi.string().trim().max(200).required(),
+    MISC: Joi.string().trim().max(100).required(),
+    LOC_type: Joi.string().trim().valid("single", "dual").required(),
+    cable_status: Joi.string().trim().valid("assigned", "unassigned"),
+    location_id: Joi.string().trim().required(),
   });
   return schema.validate(loc, { abortEarly: false });
 };
 
 exports.validateLOCDestination = (LOCDestination) => {
   const schema = Joi.object({
-    destination: Joi.string().max(100).required(),
-    destination_field_1: Joi.string().max(200).required(),
-    destination_field_2: Joi.string().max(200).required(),
-    destination_field_3: Joi.string().max(200).required(),
+    destination: Joi.string().trim().max(100).required(),
+    destination_field_1: Joi.string().trim().max(200).required(),
+    destination_field_2: Joi.string().trim().max(200).required(),
+    destination_field_3: Joi.string().trim().max(200).required(),
   });
   return schema.validate(LOCDestination, { abortEarly: false });
 };

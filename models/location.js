@@ -1,5 +1,5 @@
 const { DataTypes, Model } = require("sequelize");
-const sequelize = require("../db");
+const sequelize = require("../db/postgres/db");
 const Project = require("./project");
 const LOC = require("./LOC");
 

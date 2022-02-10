@@ -1,17 +1,14 @@
 const { DataTypes, Model } = require("sequelize");
-const sequelize = require("../db");
+const sequelize = require("../db/postgres/db");
 const LOC = require("./LOC");
-const Location = require("./location");
 
 class LOCDestination extends Model {}
 
 LOCDestination.init(
   {
     destination_id: {
-      // !! Should be generated automatically
       type: DataTypes.UUID,
       primaryKey: true,
-      // unique: true,
     },
     loc_id: {
       type: DataTypes.UUID,

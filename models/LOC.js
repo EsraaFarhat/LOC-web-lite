@@ -1,5 +1,5 @@
 const { DataTypes, Model } = require("sequelize");
-const sequelize = require("../db");
+const sequelize = require("../db/postgres/db");
 
 class LOC extends Model {}
 
@@ -15,7 +15,6 @@ LOC.init(
       unique: true,
     },
     origin_id: {
-      // !! Should be generated automatically
       type: DataTypes.UUID,
       unique: true,
     },

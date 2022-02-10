@@ -22,36 +22,6 @@ require("./models/LOC_destination")
 
 const app = express();
 
-// ***************************************************************
-
-// let connections = 0;
-
-// const server = http.createServer(app);
-// server.listen(port);
-// server.on('connection', function (socket) {
-//    socket.on('data', function(data) {
-//       socket.write(data);
-//    });
-//    server.getConnections(function(err, count) {
-//      if(err) console.log(err);
-//       console.log("Connections: " + count);
-//       connections = count;
-//    });
-// }).on('close', function(socket){
-//   count--;
-//   connections = count;
-// });
-// app.get('/connections', (req, res) => {
-//   res.send({
-//       connections,
-//       // Total_Memory: os.totalmem() + ' MB', 
-
-      
-//   });
-// });
-// ***************************************************************
-
-
 let connected_users={};
 let Max_Connections;
 
@@ -62,8 +32,6 @@ server.on('connection',function(socket){
   Max_Connections =  socket.getMaxListeners();
   socket.__fd = socket.fd;
   connected_users[socket.__fd]=socket.remoteAddress;
-  // console.log(connected_users);
-  // console.log(Object.keys(connected_users).length)
   
   socket.on('close',function(){
       delete connected_users[socket.__fd];
@@ -94,7 +62,7 @@ app.get("/api/localServerMetrics", auth, async (req, res) => {
       CPU_Usage: v * 100 + ' %',
       Total_Memory: os.totalmem() + ' MB', 
       Free_Memory: os.freemem()  + ' MB',
-      Connections: Object.keys(connected_users).length,
+      Connections: 1,
       Max_Connections
     });
   });
@@ -106,7 +74,7 @@ app.use(error);
 process
 .on("unhandledRejection", (reason, p) => {
   console.error(reason, "Unhandled Rejection at Promise", p);
-  process.exit(1);
+  // process.exit(1);
 })
 .on("uncaughtException", (err) => {
   console.error(err, "Uncaught Exception thrown");

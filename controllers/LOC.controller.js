@@ -1,6 +1,6 @@
 const _ = require("lodash");
 const uuid = require("uuid");
-const sequelize = require("../db");
+const sequelize = require("../db/postgres/db");
 
 const {
   findLOCByRouteId,
@@ -67,13 +67,17 @@ exports.createLOCHandler = async (req, res) => {
 
     // If the LOC is dual and has destination => create it
     let destination = {};
-    if (req.body.LOC_type === "dual" && req.body.destination) {
+    if (req.body.LOC_type === "dual" && Object.values(destinationBody).filter((value) => value !== undefined).length) {
       destination = await createLOCDestination(destinationBody, newLOC.loc_id);
+      return res.status(201).json({
+        message: "Dual LOC created successfully..",
+        LOC: { ...newLOC.dataValues, ...destination.dataValues },
+      });
     }
 
     res.status(201).json({
-      message: "LOC created successfully..",
-      LOC: { ...newLOC.dataValues, ...destination.dataValues },
+      message: "Single LOC created successfully..",
+      LOC: newLOC,
     });
   } catch (e) {
     res.status(500).json({ error: e.message });
