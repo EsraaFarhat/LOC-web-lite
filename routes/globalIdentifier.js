@@ -1,8 +1,8 @@
 const express = require("express");
 
-const { 
-  getAllGlobalIdentifiersHandler, 
-  getProjectsForGlobalIdentifierHandler 
+const {
+  getAllGlobalIdentifiersHandler,
+  getProjectsForGlobalIdentifierHandler,
 } = require("../controllers/globalIdentifier.controller");
 const auth = require("../middleware/auth");
 

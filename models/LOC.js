@@ -41,7 +41,7 @@ LOC.init(
     LOC_type: {
       type: DataTypes.ENUM,
       values: ["single", "dual"],
-      allowNull: false
+      allowNull: false,
     },
   },
   {
@@ -49,7 +49,5 @@ LOC.init(
     modelName: "LOC",
   }
 );
-
-
 
 module.exports = LOC;

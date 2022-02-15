@@ -1,6 +1,5 @@
 const GlobalIdentifier = require("../models/globalidentifier");
 
-
 exports.getAllGlobalIdentifiers = async (filter) => {
   try {
     const globalIdentifiers = await GlobalIdentifier.findAll({

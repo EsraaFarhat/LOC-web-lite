@@ -38,7 +38,11 @@ exports.createLOCHandler = async (req, res) => {
       });
     }
     // If the LOC is dual and has destination => validate the destination
-    if (req.body.LOC_type === "dual" && Object.values(destinationBody).filter((value) => value !== undefined).length) {
+    if (
+      req.body.LOC_type === "dual" &&
+      Object.values(destinationBody).filter((value) => value !== undefined)
+        .length
+    ) {
       const { error } = validateLOCDestination(destinationBody);
       if (error) {
         return res.status(400).json({
@@ -67,7 +71,11 @@ exports.createLOCHandler = async (req, res) => {
 
     // If the LOC is dual and has destination => create it
     let destination = {};
-    if (req.body.LOC_type === "dual" && Object.values(destinationBody).filter((value) => value !== undefined).length) {
+    if (
+      req.body.LOC_type === "dual" &&
+      Object.values(destinationBody).filter((value) => value !== undefined)
+        .length
+    ) {
       destination = await createLOCDestination(destinationBody, newLOC.loc_id);
       return res.status(201).json({
         message: "Dual LOC created successfully..",

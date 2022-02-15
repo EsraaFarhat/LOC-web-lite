@@ -21,5 +21,4 @@ GlobalIdentifier.init(
   }
 );
 
-
 module.exports = GlobalIdentifier;

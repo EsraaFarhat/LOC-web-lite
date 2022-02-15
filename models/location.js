@@ -32,25 +32,25 @@ Location.init(
 );
 
 Project.hasMany(Location, {
-  foreignKey: 'project_id',
-  onDelete: 'CASCADE',
-  onUpdate: 'CASCADE',
+  foreignKey: "project_id",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
 });
 
 Location.belongsTo(Project, {
-  foreignKey: 'project_id',
+  foreignKey: "project_id",
 });
 
 Location.hasOne(LOC, {
-  foreignKey: 'location_id',
-  onDelete: 'CASCADE',
-  onUpdate: 'CASCADE',
+  foreignKey: "location_id",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
 });
 
 LOC.belongsTo(Location, {
-  foreignKey: 'location_id',
-  onDelete: 'CASCADE',
-  onUpdate: 'CASCADE',
+  foreignKey: "location_id",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
 });
 
 module.exports = Location;

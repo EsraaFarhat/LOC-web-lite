@@ -40,9 +40,9 @@ LOCDestination.init(
 );
 
 LOC.hasOne(LOCDestination, {
-  foreignKey: 'loc_id',
-  onDelete: 'CASCADE',
-  onUpdate: 'CASCADE',
+  foreignKey: "loc_id",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
 });
 
 LOCDestination.belongsTo(LOC, {

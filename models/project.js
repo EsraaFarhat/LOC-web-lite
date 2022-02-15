@@ -31,14 +31,13 @@ Project.init(
 );
 
 GlobalIdentifier.hasMany(Project, {
-  foreignKey: 'gid',
-  onDelete: 'CASCADE',
-  onUpdate: 'CASCADE',
+  foreignKey: "gid",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
 });
 
 Project.belongsTo(GlobalIdentifier, {
   foreignKey: "gid",
 });
-
 
 module.exports = Project;
