@@ -1,4 +1,5 @@
 const _ = require("lodash");
+const log = require("./log.controller");
 
 const {
   findUserByCredentials,
