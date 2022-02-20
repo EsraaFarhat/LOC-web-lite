@@ -43,6 +43,10 @@ LOC.init(
       values: ["single", "dual"],
       allowNull: false,
     },
+    sync: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
   },
   {
     sequelize,

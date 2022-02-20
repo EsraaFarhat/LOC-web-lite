@@ -14,6 +14,10 @@ GlobalIdentifier.init(
       type: DataTypes.STRING(50),
       unique: true,
     },
+    sync: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
   },
   {
     sequelize,

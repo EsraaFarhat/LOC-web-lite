@@ -1,6 +1,5 @@
 const _ = require("lodash");
 const uuid = require("uuid");
-const sequelize = require("../db/postgres/db");
 const log = require("./log.controller");
 
 const {

@@ -24,6 +24,10 @@ Location.init(
     radius: {
       type: DataTypes.FLOAT(),
     },
+    sync: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
   },
   {
     sequelize,
