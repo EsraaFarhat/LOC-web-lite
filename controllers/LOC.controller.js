@@ -33,6 +33,15 @@ exports.createLOCHandler = async (req, res) => {
     // validate the request
     const { error } = validateLOC(locBody);
     if (error) {
+      await log(
+        req.user.user_id,
+        req.user.fullName,
+        null,
+        `Failed to create LOC (Validation error)`,
+        "POST",
+        "error",
+        400
+      );
       return res.status(400).json({
         error: _.map(error.details, (detail) => _.pick(detail, ["message"])),
       });
@@ -45,6 +54,15 @@ exports.createLOCHandler = async (req, res) => {
     ) {
       const { error } = validateLOCDestination(destinationBody);
       if (error) {
+        await log(
+          req.user.user_id,
+          req.user.fullName,
+          null,
+          `Failed to create dual LOC (Destination validation error)`,
+          "POST",
+          "error",
+          400
+        );
         return res.status(400).json({
           error: _.map(error.details, (detail) => _.pick(detail, ["message"])),
         });
@@ -53,14 +71,33 @@ exports.createLOCHandler = async (req, res) => {
 
     // check if the route_id exists in database
     let loc = await findLOCByRouteId(req.body.route_id);
-    if (loc)
+    if (loc) {
+      await log(
+        req.user.user_id,
+        req.user.fullName,
+        null,
+        `Failed to create LOC (route id already exists)`,
+        "POST",
+        "error",
+        400
+      );
       return res.status(400).json({ error: "This route id already exists!" });
+    }
 
     // validate location_id [foreign key]
     if (
       !uuid.validate(req.body.location_id) ||
       !(await findLocationById(req.body.location_id))
     ) {
+      await log(
+        req.user.user_id,
+        req.user.fullName,
+        null,
+        `Failed to create LOC (Location doesn't exist)`,
+        "POST",
+        "error",
+        404
+      );
       return res
         .status(404)
         .json({ error: "Location with given id doesn't exist!" });
@@ -77,17 +114,51 @@ exports.createLOCHandler = async (req, res) => {
         .length
     ) {
       destination = await createLOCDestination(destinationBody, newLOC.loc_id);
+
+      await log(
+        req.user.user_id,
+        req.user.fullName,
+        null,
+        `Dual LOC has been created with data: ${JSON.stringify({
+          ...newLOC.dataValues,
+          ...destination.dataValues,
+        })}`,
+        "POST",
+        "success",
+        201
+      );
+
       return res.status(201).json({
         message: "Dual LOC created successfully..",
         LOC: { ...newLOC.dataValues, ...destination.dataValues },
       });
     }
 
+    await log(
+      req.user.user_id,
+      req.user.fullName,
+      null,
+      `Single LOC has been created with data: ${JSON.stringify(newLOC)}`,
+      "POST",
+      "success",
+      201
+    );
+
     res.status(201).json({
       message: "Single LOC created successfully..",
       LOC: newLOC,
     });
   } catch (e) {
+    await log(
+      req.user.user_id,
+      req.user.fullName,
+      null,
+      `Failed to create LOC`,
+      "POST",
+      "error",
+      500
+    );
+
     res.status(500).json({ error: e.message });
   }
 };
