@@ -4,6 +4,16 @@ const { v4: uuidv4 } = require("uuid");
 const LOC = require("../models/LOC");
 const LOCDestination = require("../models/LOC_destination");
 
+exports.findLOCById = async (id) => {
+  try {
+    const loc = await LOC.findOne({ where: { loc_id: id } });
+
+    return loc;
+  } catch (e) {
+    throw new Error(e.message);
+  }
+};
+
 exports.findLOCByRouteId = async (route_id) => {
   try {
     const loc = await LOC.findOne({ where: { route_id } });
@@ -14,12 +24,28 @@ exports.findLOCByRouteId = async (route_id) => {
   }
 };
 
-exports.createLOC = async (request, user) => {
+exports.getLOC = async (loc_id) => {
+  try {
+    const loc = await LOC.findOne({
+      where: { loc_id },
+      include: [
+        {
+          model: LOCDestination,
+        },
+      ],
+    });
+    return loc;
+  } catch (e) {
+    throw new Error(e.message);
+  }
+};
+
+exports.createLOC = async (request, user_id) => {
   try {
     const newLOC = await LOC.create({
       ...request,
-      origin_id: uuidv4(),
-      user_id: user.user_id, // the logged in user
+      // origin_id: uuidv4(),
+      user_id, // the logged in user
     });
     return newLOC;
   } catch (e) {
@@ -31,10 +57,36 @@ exports.createLOCDestination = async (destinationRequest, loc_id) => {
   try {
     const destination = await LOCDestination.create({
       ...destinationRequest,
-      destination_id: uuidv4(),
+      // destination_id: uuidv4(),
       loc_id,
     });
     return destination;
+  } catch (e) {
+    throw new Error(e.message);
+  }
+};
+
+exports.updateLOC = async (id, request) => {
+  try {
+    const loc = await LOC.update(request, {
+      where: { loc_id: id },
+      returning: true,
+    });
+
+    return loc;
+  } catch (e) {
+    throw new Error(e.message);
+  }
+};
+
+exports.updateLOCDestination = async (loc_id, request) => {
+  try {
+    const locDestination = await LOCDestination.update(request, {
+      where: { loc_id },
+      returning: true,
+    });
+
+    return locDestination;
   } catch (e) {
     throw new Error(e.message);
   }

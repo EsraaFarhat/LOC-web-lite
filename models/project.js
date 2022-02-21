@@ -30,7 +30,7 @@ Project.init(
     method: {
       type: DataTypes.ENUM,
       values: ["POST", "PATCH", "DELETE"],
-      allowNull: true,
+      defaultValue: "POST",
     },
   },
   {

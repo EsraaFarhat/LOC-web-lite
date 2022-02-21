@@ -8,6 +8,7 @@ LOCDestination.init(
   {
     destination_id: {
       type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     loc_id: {
@@ -39,7 +40,7 @@ LOCDestination.init(
     method: {
       type: DataTypes.ENUM,
       values: ["POST", "PATCH", "DELETE"],
-      allowNull: true,
+      defaultValue: "POST",
     },
   },
   {

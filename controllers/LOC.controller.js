@@ -104,7 +104,7 @@ exports.createLOCHandler = async (req, res) => {
     }
 
     // Create the LOC
-    const newLOC = await createLOC(locBody, req.user);
+    const newLOC = await createLOC(locBody, req.user.user_id);
 
     // If the LOC is dual and has destination => create it
     let destination = {};

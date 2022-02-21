@@ -16,6 +16,7 @@ LOC.init(
     },
     origin_id: {
       type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       unique: true,
     },
     origin: {
@@ -50,7 +51,7 @@ LOC.init(
     method: {
       type: DataTypes.ENUM,
       values: ["POST", "PATCH", "DELETE"],
-      allowNull: true,
+      defaultValue: "POST",
     },
   },
   {
