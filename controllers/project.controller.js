@@ -27,7 +27,7 @@ exports.getLocationsForProjectHandler = async (req, res) => {
         req.user.user_id,
         req.user.fullName,
         null,
-        `Failed to get project with id (${id}) (doesn't exist)`,
+        `Failed to get project with id (${project_id}) (doesn't exist)`,
         "GET",
         "error",
         404
@@ -63,7 +63,7 @@ exports.getLocationsForProjectHandler = async (req, res) => {
       req.user.user_id,
       req.user.fullName,
       null,
-      `Failed to get all locations for project with id (${id})`,
+      `Failed to get all locations for project with id (${req.body.id})`,
       "GET",
       "error",
       500

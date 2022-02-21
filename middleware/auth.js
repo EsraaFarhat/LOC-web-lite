@@ -7,7 +7,6 @@ const auth = async (req, res, next) => {
     const authToken = req.header("Authorization").replace("Bearer ", "");
     const decoded = jwt.verify(authToken, process.env.PRIVATE_KEY);
     const user = await User.findOne({ where: { user_id: decoded.user_id } });
-
     // If the user was deleted or his token was deleted from the database
     if (
       !user ||
