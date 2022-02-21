@@ -32,6 +32,10 @@ LOCDestination.init(
     destination_field_3: {
       type: DataTypes.STRING(200),
     },
+    sync: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
   },
   {
     sequelize,

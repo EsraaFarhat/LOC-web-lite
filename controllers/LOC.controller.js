@@ -1,6 +1,6 @@
 const _ = require("lodash");
 const uuid = require("uuid");
-const log = require("./log.controller");
+const { log } = require("./log.controller");
 
 const {
   findLOCByRouteId,

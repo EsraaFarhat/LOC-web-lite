@@ -1,5 +1,5 @@
 const uuid = require("uuid");
-const log = require("./log.controller");
+const { log } = require("./log.controller");
 
 const { findProjectById } = require("../services/project.service");
 const { getLocationsForProject } = require("../services/location.service");

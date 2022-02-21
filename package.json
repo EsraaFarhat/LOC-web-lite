@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/EsraaFarhat/LOC-web-lite#readme",
   "dependencies": {
+    "axios": "^0.26.0",
     "bcrypt": "^5.0.1",
     "check-disk-space": "^3.2.0",
     "cors": "^2.8.5",
