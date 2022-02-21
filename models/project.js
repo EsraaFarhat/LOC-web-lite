@@ -27,6 +27,11 @@ Project.init(
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
+    method: {
+      type: DataTypes.ENUM,
+      values: ["POST", "PATCH", "DELETE"],
+      allowNull: true,
+    },
   },
   {
     sequelize,
