@@ -4,10 +4,15 @@ const { log } = require("./log.controller");
 
 const {
   findLOCByRouteId,
+  findLOCById,
   validateLOC,
   validateLOCDestination,
   createLOC,
   createLOCDestination,
+  validateUpdateLOC,
+  validateUpdateLOCDestination,
+  updateLOC,
+  updateLOCDestination,
 } = require("../services/LOC.service");
 const { findLocationById } = require("../services/location.service");
 
@@ -159,6 +164,185 @@ exports.createLOCHandler = async (req, res) => {
       500
     );
 
+    res.status(500).json({ error: e.message });
+  }
+};
+
+exports.updateLOCHandler = async (req, res) => {
+  try {
+    if (!uuid.validate(req.params.id)) {
+      await log(
+        req.user.user_id,
+        req.user.fullName,
+        null,
+        `Failed to update LOC with id (${req.params.id}) (Invalid ID)`,
+        "PATCH",
+        "error",
+        400
+      );
+      return res.status(400).json({ error: "Invalid Id!" });
+    }
+
+    const id = req.params.id;
+
+    // check if the LOC exists in database
+    let loc = await findLOCById(id);
+
+    if (!loc) {
+      await log(
+        req.user.user_id,
+        req.user.fullName,
+        null,
+        `Failed to update LOC with id (${id}) (doesn't exist)`,
+        "PATCH",
+        "error",
+        404
+      );
+      return res.status(404).json({ error: "LOC doesn't exist!" });
+    }
+    if (!Object.keys(req.body).length) {
+      await log(
+        req.user.user_id,
+        req.user.fullName,
+        null,
+        `Nothing to update in this LOC`,
+        "PATCH",
+        "info",
+        200
+      );
+      return res.json({ message: "There is nothing to update!" });
+    }
+
+    if (req.body.route_id) {
+      // check if the route_id exists in database
+      loc = await findLOCByRouteId(req.body.route_id);
+
+      if (loc && loc.loc_id != id) {
+        await log(
+          req.user.user_id,
+          req.user.fullName,
+          null,
+          `Failed to update LOC (route id already exists)`,
+          "PATCH",
+          "error",
+          400
+        );
+        return res
+          .status(400)
+          .json({ error: "This Route Id already exists, try another one!" });
+      }
+    }
+
+    const locBody = {
+      route_id: req.body.route_id,
+      origin: req.body.origin,
+      field_1: req.body.field_1,
+      field_2: req.body.field_2,
+      field_3: req.body.field_3,
+      MISC: req.body.MISC,
+      cable_status: req.body.cable_status,
+    };
+    const destinationBody = {
+      destination: req.body.destination,
+      destination_field_1: req.body.destination_field_1,
+      destination_field_2: req.body.destination_field_2,
+      destination_field_3: req.body.destination_field_3,
+    };
+
+    // validate the request first
+    let updatedLOC;
+    const { error } = validateUpdateLOC(locBody);
+    if (error) {
+      await log(
+        req.user.user_id,
+        req.user.fullName,
+        null,
+        `Failed to update LOC (Validation error)`,
+        "PATCH",
+        "error",
+        400
+      );
+      return res.status(400).json({
+        error: _.map(error.details, (detail) => _.pick(detail, ["message"])),
+      });
+    }
+    updatedLOC = await updateLOC(id, locBody);
+
+    if (loc.LOC_type === "dual" && Object.keys(destinationBody).length) {
+      const { error } = validateUpdateLOCDestination(destinationBody);
+      if (error) {
+        await log(
+          req.user.user_id,
+          req.user.fullName,
+          null,
+          `Failed to update dual LOC (Destination validation error)`,
+          "PATCH",
+          "error",
+          400
+        );
+        return res.status(400).json({
+          error: _.map(error.details, (detail) => _.pick(detail, ["message"])),
+        });
+      }
+
+      const updatedDestination = await updateLOCDestination(
+        id,
+        destinationBody
+      );
+
+      await log(
+        req.user.user_id,
+        req.user.fullName,
+        null,
+        `Update dual LOC (${id}) with data ${JSON.stringify(req.body)}`,
+        "PATCH",
+        "success",
+        200
+      );
+
+      if (updatedLOC[1]) {
+        return res.json({
+          message: "Dual LOC updated successfully..",
+          loc: {
+            ...updatedLOC[1][0].dataValues,
+            ...updatedDestination[1][0].dataValues,
+          },
+        });
+      } else {
+        return res.json({
+          message: "Dual LOC updated successfully..",
+          loc: {
+            ...loc.dataValues,
+            ...updatedDestination[1][0].dataValues,
+          },
+        });
+      }
+    }
+
+    await log(
+      req.user.user_id,
+      req.user.fullName,
+      null,
+      `Update LOC (${id}) with data ${JSON.stringify(req.body)}`,
+      "PATCH",
+      "success",
+      200
+    );
+
+    res.json({
+      message: "LOC updated successfully..",
+      loc: updatedLOC[1][0].dataValues,
+    });
+  } catch (e) {
+    await log(
+      req.user.user_id,
+      req.user.fullName,
+      null,
+      `Failed to update LOC`,
+      "PATCH",
+      "error",
+      500
+    );
     res.status(500).json({ error: e.message });
   }
 };

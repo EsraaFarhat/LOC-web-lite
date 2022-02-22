@@ -56,12 +56,10 @@ exports.downloadLocationHandler = async (req, res) => {
       return res.status(404).json({ error: "Location doesn't exist" });
     }
 
-    // if (response.data.globalIdentifier.sync === false) {
     let globalIdentifier = await findGlobalIdentifierById(
       response.data.globalIdentifier.gid
     );
     if (!globalIdentifier) {
-      console.log(response.data.globalIdentifier);
       await createGlobalIdentifier(response.data.globalIdentifier);
       console.log("global identifier created");
     } else {
@@ -71,17 +69,6 @@ exports.downloadLocationHandler = async (req, res) => {
       );
       console.log("global identifier updated");
     }
-    // await axios.patch(
-    //   `${process.env.EC2_URL}/api/globalIdentifiers/${response.data.globalIdentifier.gid}`,
-    //   { sync: true },
-    //   {
-    //     headers: {
-    //       Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjhiOWFiYTktYTliNy00NjgwLThjMjYtNDE3MzJjODQwMWE4IiwiaWF0IjoxNjQ1NDg5MjM0fQ.XK99rAYhDg6LbQzyhKPOiWABztCZEe53ilNNlt1Az58`,
-    //     },
-    //   }
-    // );
-    // }
-    // if (response.data.project.sync === false) {
     let project = await findProjectById(response.data.project.id);
     if (!project) {
       await createProject(response.data.project);
@@ -90,17 +77,6 @@ exports.downloadLocationHandler = async (req, res) => {
       await updateProject(project.id, response.data.project);
       console.log("project updated");
     }
-    //   await axios.patch(
-    //     `${process.env.EC2_URL}/api/projects/${response.data.project.id}`,
-    //     { sync: true },
-    //     {
-    //       headers: {
-    //         Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjhiOWFiYTktYTliNy00NjgwLThjMjYtNDE3MzJjODQwMWE4IiwiaWF0IjoxNjQ1NDg5MjM0fQ.XK99rAYhDg6LbQzyhKPOiWABztCZEe53ilNNlt1Az58`,
-    //       },
-    //     }
-    //   );
-    // }
-    // if (response.data.location.sync === false) {
     let location = await findLocationById(response.data.location.id);
     if (!location) {
       await createLocation(response.data.location);
@@ -109,18 +85,7 @@ exports.downloadLocationHandler = async (req, res) => {
       await updateLocation(location.id, response.data.location);
       console.log("location updated");
     }
-    //   await axios.patch(
-    //     `${process.env.EC2_URL}/api/locations/${response.data.location.id}`,
-    //     { sync: true },
-    //     {
-    //       headers: {
-    //         Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjhiOWFiYTktYTliNy00NjgwLThjMjYtNDE3MzJjODQwMWE4IiwiaWF0IjoxNjQ1NDg5MjM0fQ.XK99rAYhDg6LbQzyhKPOiWABztCZEe53ilNNlt1Az58`,
-    //       },
-    //     }
-    //   );
-    // }
     response.data.singleLOCs.forEach(async (loc) => {
-      // if (loc.sync === false) {
       let local_loc = await findLOCById(loc.loc_id);
       if (!local_loc) {
         await createLOC(loc);
@@ -130,20 +95,9 @@ exports.downloadLocationHandler = async (req, res) => {
         await updateLOC(local_loc.loc_id, loc);
         console.log("single loc updated");
       }
-      //   await axios.patch(
-      //     `${process.env.EC2_URL}/api/LOCs/${loc.loc_id}`,
-      //     { sync: true },
-      //     {
-      //       headers: {
-      //         Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjhiOWFiYTktYTliNy00NjgwLThjMjYtNDE3MzJjODQwMWE4IiwiaWF0IjoxNjQ1NDg5MjM0fQ.XK99rAYhDg6LbQzyhKPOiWABztCZEe53ilNNlt1Az58`,
-      //       },
-      //     }
-      //   );
-      // }
     });
     response.data.dualLOCs.forEach(async (loc) => {
       let local_loc = await getLOC(loc.loc_id);
-      // if (loc.sync === false) {
       if (!local_loc) {
         local_loc = await createLOC(
           {
@@ -183,16 +137,6 @@ exports.downloadLocationHandler = async (req, res) => {
         });
         console.log("dual loc updated");
       }
-      //   await axios.patch(
-      //     `${process.env.EC2_URL}/api/LOCs/${loc.loc_id}`,
-      //     { sync: true },
-      //     {
-      //       headers: {
-      //         Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjhiOWFiYTktYTliNy00NjgwLThjMjYtNDE3MzJjODQwMWE4IiwiaWF0IjoxNjQ1NDg5MjM0fQ.XK99rAYhDg6LbQzyhKPOiWABztCZEe53ilNNlt1Az58`,
-      //       },
-      //     }
-      //   );
-      // }
       if (loc.LOCDestination) {
       let local_loc_destination = local_loc.LOCDestination;
       if (!local_loc_destination) {
@@ -221,15 +165,6 @@ exports.downloadLocationHandler = async (req, res) => {
         });
         console.log("destination updated");
       }
-      //   await axios.patch(
-      //     `${process.env.EC2_URL}/api/LOCs/${loc.loc_id}`,
-      //     { destination_sync: true },
-      //     {
-      //       headers: {
-      //         Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjhiOWFiYTktYTliNy00NjgwLThjMjYtNDE3MzJjODQwMWE4IiwiaWF0IjoxNjQ1NDg5MjM0fQ.XK99rAYhDg6LbQzyhKPOiWABztCZEe53ilNNlt1Az58`,
-      //       },
-      //     }
-      //   );
       }
     });
 

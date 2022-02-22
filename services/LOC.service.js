@@ -107,12 +107,35 @@ exports.validateLOC = (loc) => {
   return schema.validate(loc, { abortEarly: false });
 };
 
+exports.validateUpdateLOC = (loc) => {
+  const schema = Joi.object({
+    route_id: Joi.string().trim().max(100),
+    origin: Joi.string().trim().max(100),
+    field_1: Joi.string().trim().max(200),
+    field_2: Joi.string().trim().max(200),
+    field_3: Joi.string().trim().max(200),
+    MISC: Joi.string().trim().max(100),
+    cable_status: Joi.string().trim().valid("assigned", "unassigned"),
+  });
+  return schema.validate(loc, { abortEarly: false });
+};
+
 exports.validateLOCDestination = (LOCDestination) => {
   const schema = Joi.object({
     destination: Joi.string().trim().max(100).required(),
     destination_field_1: Joi.string().trim().max(200).required(),
     destination_field_2: Joi.string().trim().max(200).required(),
     destination_field_3: Joi.string().trim().max(200).required(),
+  });
+  return schema.validate(LOCDestination, { abortEarly: false });
+};
+
+exports.validateUpdateLOCDestination = (LOCDestination) => {
+  const schema = Joi.object({
+    destination: Joi.string().trim().max(100),
+    destination_field_1: Joi.string().trim().max(200),
+    destination_field_2: Joi.string().trim().max(200),
+    destination_field_3: Joi.string().trim().max(200),
   });
   return schema.validate(LOCDestination, { abortEarly: false });
 };
