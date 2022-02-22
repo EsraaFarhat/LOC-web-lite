@@ -33,14 +33,9 @@ LOCDestination.init(
     destination_field_3: {
       type: DataTypes.STRING(200),
     },
-    sync: {
+    destination_sync: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
-    },
-    method: {
-      type: DataTypes.ENUM,
-      values: ["POST", "PATCH", "DELETE"],
-      defaultValue: "POST",
     },
   },
   {
