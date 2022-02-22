@@ -139,3 +139,20 @@ exports.validateUpdateLOCDestination = (LOCDestination) => {
   });
   return schema.validate(LOCDestination, { abortEarly: false });
 };
+
+exports.getLOCsByLocationId = async (location_id) => {
+  try {
+    const LOCs = await LOC.findAll({
+      where: { location_id },
+      include: [
+        {
+          model: LOCDestination,
+          // required: true,
+        },
+      ],
+    });
+    return LOCs;
+  } catch (e) {
+    throw new Error(e.message);
+  }
+};

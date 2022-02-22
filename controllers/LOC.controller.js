@@ -215,9 +215,9 @@ exports.updateLOCHandler = async (req, res) => {
 
     if (req.body.route_id) {
       // check if the route_id exists in database
-      loc = await findLOCByRouteId(req.body.route_id);
-
-      if (loc && loc.loc_id != id) {
+      let loc2 = await findLOCByRouteId(req.body.route_id);
+      if (loc2 && loc2.loc_id != id) {
+        console.log(loc2);
         await log(
           req.user.user_id,
           req.user.fullName,
@@ -266,6 +266,7 @@ exports.updateLOCHandler = async (req, res) => {
         error: _.map(error.details, (detail) => _.pick(detail, ["message"])),
       });
     }
+    if(!locBody.sync) locBody.sync = false;
     updatedLOC = await updateLOC(id, locBody);
 
     if (loc.LOC_type === "dual" && Object.keys(destinationBody).length) {
@@ -285,6 +286,7 @@ exports.updateLOCHandler = async (req, res) => {
         });
       }
 
+    if(!destinationBody.destination_sync) destinationBody.destination_sync = false;
       const updatedDestination = await updateLOCDestination(
         id,
         destinationBody
