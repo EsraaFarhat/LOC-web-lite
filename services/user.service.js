@@ -37,14 +37,14 @@ exports.generateAuthToken = async (user) => {
   try {
     const message = process.env.MESSAGE,
       nonce = user.email,
-      path = process.env.PATH,
+      path = "PathTONoWhere",
       privateKey = process.env.PRIVATE_KEY;
 
     let hashDigest = sha256(nonce + message);
-    hashDigest = sha256(nonce + message);
+    hashDigest = sha256(hashDigest);
     const token = Base64.stringify(hmacSHA512(path + hashDigest, privateKey));
 
-    console.log(token);
+    // console.log(token);
     // const token = jwt.sign({ user_id: user.user_id }, process.env.PRIVATE_KEY);
     // user.tokens = user.tokens.concat({ token });
 

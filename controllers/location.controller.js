@@ -29,9 +29,6 @@ const {
 
 const { log } = require("./log.controller");
 
-const token =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiODhkOGNhMmItM2JiZC00NzNkLWE3ZjgtYWRhYTFkZjVhZTY5IiwiaWF0IjoxNjQ1NTM2Njk0fQ.lbSWULmmx-8D5OCs-cGg3v_Kt4HNd7VNrxI7HkTrPBY";
-
 exports.downloadLocationHandler = async (req, res) => {
   try {
     if (!uuid.validate(req.params.id)) {
@@ -53,7 +50,7 @@ exports.downloadLocationHandler = async (req, res) => {
       `${process.env.EC2_URL}/api/locations/${id}/download`,
       {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${req.user.token}`,
         },
       }
     );
@@ -208,7 +205,7 @@ exports.uploadLOCs = async (data) => {
             `${process.env.EC2_URL}/api/LOCs/${local_loc.loc_id}`,
             {
               headers: {
-                Authorization: `Bearer ${token}`,
+                Authorization: `Bearer ${req.user.token}`,
               },
             }
           );
@@ -221,7 +218,7 @@ exports.uploadLOCs = async (data) => {
                 method: "post",
                 body: JSON.stringify(local_loc.dataValues),
                 headers: {
-                  Authorization: `Bearer ${token}`,
+                  Authorization: `Bearer ${req.user.token}`,
                   "Content-Type": "application/json",
                 },
               }
@@ -248,7 +245,7 @@ exports.uploadLOCs = async (data) => {
                 method: "patch",
                 body: JSON.stringify(local_loc.dataValues),
                 headers: {
-                  Authorization: `Bearer ${token}`,
+                  Authorization: `Bearer ${req.user.token}`,
                   "Content-Type": "application/json",
                 },
               }

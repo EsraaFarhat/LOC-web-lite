@@ -12,11 +12,11 @@ const auth = async (req, res, next) => {
 
     const message = process.env.MESSAGE,
       nonce = loggedInUser.email,
-      path = process.env.PATH,
+      path = "PathTONoWhere",
       privateKey = process.env.PRIVATE_KEY;
 
     let hashDigest = sha256(nonce + message);
-    hashDigest = sha256(nonce + message);
+    hashDigest = sha256(hashDigest);
     const token = Base64.stringify(hmacSHA512(path + hashDigest, privateKey));
 
     // console.log(token);
