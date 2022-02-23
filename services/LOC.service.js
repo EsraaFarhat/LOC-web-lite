@@ -92,6 +92,14 @@ exports.updateLOCDestination = async (loc_id, request) => {
   }
 };
 
+exports.deleteLOC = async (id) => {
+  try {
+    await LOC.destroy({ where: { loc_id: id } });
+  } catch (e) {
+    throw new Error(e.message);
+  }
+};
+
 exports.validateLOC = (loc) => {
   const schema = Joi.object({
     route_id: Joi.string().trim().max(100).required(),

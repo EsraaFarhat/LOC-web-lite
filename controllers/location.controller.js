@@ -6,6 +6,8 @@ const {
   findGlobalIdentifierById,
   createGlobalIdentifier,
   updateGlobalIdentifier,
+  findGlobalIdentifier,
+  deleteGlobalIdentifier,
 } = require("../services/globalIdentifier.service");
 const {
   createLOC,
@@ -15,6 +17,8 @@ const {
   createLOCDestination,
   updateLOCDestination,
   getLOCsByLocationId,
+  findLOCByRouteId,
+  deleteLOC,
 } = require("../services/LOC.service");
 const {
   findLocationById,
@@ -66,47 +70,129 @@ exports.downloadLocationHandler = async (req, res) => {
     );
     data.globalIdentifier.sync = true;
     if (!globalIdentifier) {
-      await createGlobalIdentifier(data.globalIdentifier);
-      console.log("global identifier created");
+      try {
+        let globalIdentifier = await findGlobalIdentifier(
+          data.globalIdentifier.name
+        );
+        if (globalIdentifier)
+          await deleteGlobalIdentifier(globalIdentifier.gid);
+        await createGlobalIdentifier(data.globalIdentifier);
+        console.log("global identifier created");
+      } catch (e) {
+        throw new Error(`Couldn't create global identifier: ${e.message}`);
+      }
     } else {
-      await updateGlobalIdentifier(globalIdentifier.gid, data.globalIdentifier);
-      console.log("global identifier updated");
+      try {
+        let globalIdentifier2 = await findGlobalIdentifier(
+          data.globalIdentifier.name
+        );
+        if (globalIdentifier2 && globalIdentifier2.gid !== globalIdentifier.gid)
+          await deleteGlobalIdentifier(globalIdentifier2.gid);
+        await updateGlobalIdentifier(
+          globalIdentifier.gid,
+          data.globalIdentifier
+        );
+        console.log("global identifier updated");
+      } catch (e) {
+        throw new Error(`Couldn't update global identifier: ${e.message}`);
+      }
     }
     let project = await findProjectById(data.project.id);
     data.project.sync = true;
     if (!project) {
-      await createProject(data.project);
-      console.log("project created");
+      try {
+        await createProject(data.project);
+        console.log("project created");
+      } catch (e) {
+        throw new Error(`Couldn't create project: ${e.message}`);
+      }
     } else {
-      await updateProject(project.id, data.project);
-      console.log("project updated");
+      try {
+        await updateProject(project.id, data.project);
+        console.log("project updated");
+      } catch (e) {
+        throw new Error(`Couldn't update project: ${e.message}`);
+      }
     }
     let location = await findLocationById(data.location.id);
     data.location.sync = true;
     if (!location) {
-      await createLocation(data.location);
-      console.log("location created");
+      try {
+        await createLocation(data.location);
+        console.log("location created");
+      } catch (e) {
+        throw new Error(`Couldn't create location: ${e.message}`);
+      }
     } else {
-      await updateLocation(location.id, data.location);
-      console.log("location updated");
+      try {
+        await updateLocation(location.id, data.location);
+        console.log("location updated");
+      } catch (e) {
+        throw new Error(`Couldn't update location: ${e.message}`);
+      }
     }
+    let errors = [];
     data.singleLOCs.forEach(async (loc) => {
       let local_loc = await findLOCById(loc.loc_id);
       loc.sync = true;
       if (!local_loc) {
-        await createLOC(loc, req.user.user_id);
-        console.log("single loc created");
+        try {
+          let loc_with_routeID = await findLOCByRouteId(loc.route_id);
+          if (loc_with_routeID) await deleteLOC(loc_with_routeID.loc_id);
+          await createLOC(loc, req.user.user_id);
+          console.log("single loc created");
+        } catch (e) {
+          errors.push(`Couldn't create loc ${loc.loc_id}: ${e.message}`);
+        }
       } else {
-        loc.user_id = local_loc.user_id;
-        await updateLOC(local_loc.loc_id, loc);
-        console.log("single loc updated");
+        try {
+          let loc_with_routeID = await findLOCByRouteId(loc.route_id);
+          if (loc_with_routeID && loc_with_routeID.loc_id !== local_loc.loc_id)
+            await deleteLOC(loc_with_routeID.loc_id);
+          loc.user_id = local_loc.user_id;
+          await updateLOC(local_loc.loc_id, loc);
+          console.log("single loc updated");
+        } catch (e) {
+          errors.push(`Couldn't update loc ${loc.loc_id}: ${e.message}`);
+        }
       }
     });
     data.dualLOCs.forEach(async (loc) => {
       let local_loc = await getLOC(loc.loc_id);
       if (!local_loc) {
-        local_loc = await createLOC(
-          {
+        try {
+          let loc_with_routeID = await findLOCByRouteId(loc.route_id);
+          if (loc_with_routeID) await deleteLOC(loc_with_routeID.loc_id);
+          local_loc = await createLOC(
+            {
+              loc_id: loc.loc_id,
+              route_id: loc.route_id,
+              origin_id: loc.origin_id,
+              origin: loc.origin,
+              field_1: loc.field_1,
+              field_2: loc.field_2,
+              field_3: loc.field_3,
+              MISC: loc.MISC,
+              cable_status: loc.cable_status,
+              LOC_type: loc.LOC_type,
+              createdAt: loc.createdAt,
+              updatedAt: loc.updatedAt,
+              location_id: loc.location_id,
+              sync: true,
+            },
+            req.user.user_id
+          );
+          console.log("dual loc created");
+        } catch (e) {
+          errors.push(`Couldn't create loc ${loc.loc_id}: ${e.message}`);
+        }
+      } else {
+        try {
+          let loc_with_routeID = await findLOCByRouteId(loc.route_id);
+          if (loc_with_routeID && loc_with_routeID.loc_id !== local_loc.loc_id)
+            await deleteLOC(loc_with_routeID.loc_id);
+          loc.user_id = local_loc.user_id;
+          await updateLOC(local_loc.loc_id, {
             loc_id: loc.loc_id,
             route_id: loc.route_id,
             origin_id: loc.origin_id,
@@ -121,35 +207,38 @@ exports.downloadLocationHandler = async (req, res) => {
             updatedAt: loc.updatedAt,
             location_id: loc.location_id,
             sync: true,
-          },
-          req.user.user_id
-        );
-        console.log("dual loc created");
-      } else {
-        loc.user_id = local_loc.user_id;
-        await updateLOC(local_loc.loc_id, {
-          loc_id: loc.loc_id,
-          route_id: loc.route_id,
-          origin_id: loc.origin_id,
-          origin: loc.origin,
-          field_1: loc.field_1,
-          field_2: loc.field_2,
-          field_3: loc.field_3,
-          MISC: loc.MISC,
-          cable_status: loc.cable_status,
-          LOC_type: loc.LOC_type,
-          createdAt: loc.createdAt,
-          updatedAt: loc.updatedAt,
-          location_id: loc.location_id,
-          sync: true,
-        });
-        console.log("dual loc updated");
+          });
+          console.log("dual loc updated");
+        } catch (e) {
+          errors.push(`Couldn't update loc ${loc.loc_id}: ${e.message}`);
+        }
       }
       if (loc.LOCDestination) {
         let local_loc_destination = local_loc.LOCDestination;
         if (!local_loc_destination) {
-          await createLOCDestination(
-            {
+          try {
+            await createLOCDestination(
+              {
+                destination_id: loc.LOCDestination.destination_id,
+                destination: loc.LOCDestination.destination,
+                destination_field_1: loc.LOCDestination.destination_field_1,
+                destination_field_2: loc.LOCDestination.destination_field_2,
+                destination_field_3: loc.LOCDestination.destination_field_3,
+                createdAt: loc.LOCDestination.createdAt,
+                updatedAt: loc.LOCDestination.updatedAt,
+                destination_sync: true,
+              },
+              loc.LOCDestination.loc_id
+            );
+            console.log("destination created");
+          } catch (e) {
+            errors.push(
+              `Couldn't create destination for loc ${loc.loc_id}: ${e.message}`
+            );
+          }
+        } else {
+          try {
+            await updateLOCDestination(loc.LOCDestination.loc_id, {
               destination_id: loc.LOCDestination.destination_id,
               destination: loc.LOCDestination.destination,
               destination_field_1: loc.LOCDestination.destination_field_1,
@@ -158,27 +247,20 @@ exports.downloadLocationHandler = async (req, res) => {
               createdAt: loc.LOCDestination.createdAt,
               updatedAt: loc.LOCDestination.updatedAt,
               destination_sync: true,
-            },
-            loc.LOCDestination.loc_id
-          );
-          console.log("destination created");
-        } else {
-          await updateLOCDestination(loc.LOCDestination.loc_id, {
-            destination_id: loc.LOCDestination.destination_id,
-            destination: loc.LOCDestination.destination,
-            destination_field_1: loc.LOCDestination.destination_field_1,
-            destination_field_2: loc.LOCDestination.destination_field_2,
-            destination_field_3: loc.LOCDestination.destination_field_3,
-            createdAt: loc.LOCDestination.createdAt,
-            updatedAt: loc.LOCDestination.updatedAt,
-            destination_sync: true,
-          });
-          console.log("destination updated");
+            });
+            console.log("destination updated");
+          } catch (e) {
+            errors.push(
+              `Couldn't update destination for loc ${loc.loc_id}: ${e.message}`
+            );
+          }
         }
       }
     });
 
-    res.json({ message: "Downloaded Successfully.." });
+    if (errors.length !== 0)
+      return res.json({ message: "Download completed with errors", errors });
+    res.json({ message: "Download completed.." });
   } catch (e) {
     await log(
       req.user.user_id,
@@ -306,7 +388,7 @@ exports.uploadLocationHandler = async (req, res) => {
         .status(400)
         .json({ message: "Upload completed with errors", error: errors[0] });
     }
-    
+
     res.json({ message: "Upload completed successfully.." });
   } catch (e) {
     await log(
