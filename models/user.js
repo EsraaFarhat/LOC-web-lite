@@ -41,9 +41,10 @@ User.init(
       values: ["admin", "super user", "user"],
       defaultValue: "user",
     },
-    tokens: {
-      type: DataTypes.ARRAY(DataTypes.JSON),
-      defaultValue: [],
+    token: {
+      // type: DataTypes.ARRAY(DataTypes.JSON),
+      // defaultValue: [],
+      type: DataTypes.STRING,
     },
   },
   {

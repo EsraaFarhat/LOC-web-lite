@@ -1,3 +1,6 @@
+const sha256 = require("crypto-js/sha256");
+const hmacSHA512 = require("crypto-js/hmac-sha512");
+const Base64 = require("crypto-js/enc-base64");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
@@ -32,8 +35,20 @@ exports.findUserByCredentials = async (email, password) => {
 // Generate token for login
 exports.generateAuthToken = async (user) => {
   try {
-    const token = jwt.sign({ user_id: user.user_id }, process.env.PRIVATE_KEY);
-    user.tokens = user.tokens.concat({ token });
+    const message = process.env.MESSAGE,
+      nonce = user.email,
+      path = process.env.PATH,
+      privateKey = process.env.PRIVATE_KEY;
+
+    let hashDigest = sha256(nonce + message);
+    hashDigest = sha256(nonce + message);
+    const token = Base64.stringify(hmacSHA512(path + hashDigest, privateKey));
+
+    console.log(token);
+    // const token = jwt.sign({ user_id: user.user_id }, process.env.PRIVATE_KEY);
+    // user.tokens = user.tokens.concat({ token });
+
+    user.token = token;
     await user.save();
 
     return token;

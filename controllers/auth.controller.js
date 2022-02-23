@@ -33,9 +33,10 @@ exports.UserLoginHandler = async (req, res) => {
 
 exports.UserLogoutHandler = async (req, res) => {
   try {
-    req.user.tokens = req.user.tokens.filter(
-      (token) => token.token !== req.token
-    );
+    req.user.token = "";
+    // req.user.tokens = req.user.tokens.filter(
+    //   (token) => token.token !== req.token
+    // );
     await req.user.save();
 
     await log(
