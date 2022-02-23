@@ -65,6 +65,8 @@ exports.downloadLocationHandler = async (req, res) => {
         .json({ message: "Error from the main server", error: data.error });
     }
 
+    let errors = [];
+
     let globalIdentifier = await findGlobalIdentifierById(
       data.globalIdentifier.gid
     );
@@ -79,7 +81,9 @@ exports.downloadLocationHandler = async (req, res) => {
         await createGlobalIdentifier(data.globalIdentifier);
         console.log("global identifier created");
       } catch (e) {
-        throw new Error(`Couldn't create global identifier: ${e.message}`);
+        throw new Error(
+          `Couldn't create global identifier ${globalIdentifier.gid}: ${e.message}`
+        );
       }
     } else {
       try {
@@ -94,7 +98,9 @@ exports.downloadLocationHandler = async (req, res) => {
         );
         console.log("global identifier updated");
       } catch (e) {
-        throw new Error(`Couldn't update global identifier: ${e.message}`);
+        errors.push(
+          `Couldn't update global identifier ${globalIdentifier.gid}: ${e.message}`
+        );
       }
     }
     let project = await findProjectById(data.project.id);
@@ -104,14 +110,14 @@ exports.downloadLocationHandler = async (req, res) => {
         await createProject(data.project);
         console.log("project created");
       } catch (e) {
-        throw new Error(`Couldn't create project: ${e.message}`);
+        throw new Error(`Couldn't create project ${project.id}: ${e.message}`);
       }
     } else {
       try {
         await updateProject(project.id, data.project);
         console.log("project updated");
       } catch (e) {
-        throw new Error(`Couldn't update project: ${e.message}`);
+        errors.push(`Couldn't update project ${project.id}: ${e.message}`);
       }
     }
     let location = await findLocationById(data.location.id);
@@ -121,17 +127,18 @@ exports.downloadLocationHandler = async (req, res) => {
         await createLocation(data.location);
         console.log("location created");
       } catch (e) {
-        throw new Error(`Couldn't create location: ${e.message}`);
+        throw new Error(
+          `Couldn't create location ${location.id}: ${e.message}`
+        );
       }
     } else {
       try {
         await updateLocation(location.id, data.location);
         console.log("location updated");
       } catch (e) {
-        throw new Error(`Couldn't update location: ${e.message}`);
+        errors.push(`Couldn't update location ${location.id}: ${e.message}`);
       }
     }
-    let errors = [];
     data.singleLOCs.forEach(async (loc) => {
       let local_loc = await findLOCById(loc.loc_id);
       loc.sync = true;
