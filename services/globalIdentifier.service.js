@@ -23,6 +23,53 @@ exports.getAllGlobalIdentifiers = async (filter) => {
   }
 };
 
+exports.getGlobalIdentifiers = async (filter, loggedInUser) => {
+  try {
+    const globalIdentifiers = await GlobalIdentifier.findAll({
+      where: filter,
+      include: [
+        {
+          model: User,
+        },
+      ],
+    });
+    return globalIdentifiers.filter(
+      (gid) =>
+        gid.User.user_id === loggedInUser.user_id ||
+        gid.User.sup_id === loggedInUser.user_id ||
+        gid.User.sup_id === loggedInUser.sup_id
+    );
+  } catch (e) {
+    throw new Error(e.message);
+  }
+};
+
+exports.getGlobalIdentifierWithUser = async (gid) => {
+  try {
+    const globalIdentifier = await GlobalIdentifier.findOne({
+      where: { gid },
+      include: [
+        {
+          model: User,
+        },
+      ],
+    });
+    return globalIdentifier;
+  } catch (e) {
+    throw new Error(e.message);
+  }
+};
+
+exports.findGlobalIdentifierById = async (gid) => {
+  try {
+    const globalIdentifier = await GlobalIdentifier.findOne({ where: { gid } });
+    return globalIdentifier;
+  } catch (e) {
+    throw new Error(e.message);
+  }
+};
+
+
 exports.createGlobalIdentifier = async (request) => {
   try {
     const newGlobalIdentifier = await GlobalIdentifier.create(request);
@@ -57,11 +104,3 @@ exports.deleteGlobalIdentifier = async (gid) => {
   }
 };
 
-exports.findGlobalIdentifierById = async (gid) => {
-  try {
-    const globalIdentifier = await GlobalIdentifier.findOne({ where: { gid } });
-    return globalIdentifier;
-  } catch (e) {
-    throw new Error(e.message);
-  }
-};

@@ -34,6 +34,9 @@ exports.createLOCHandler = async (req, res) => {
       destination_field_1: req.body.destination_field_1,
       destination_field_2: req.body.destination_field_2,
       destination_field_3: req.body.destination_field_3,
+      longitude: req.body.longitude,
+      latitude: req.body.latitude,
+      radius: req.body.radius,
     };
     // validate the request
     const { error } = validateLOC(locBody);
@@ -143,14 +146,14 @@ exports.createLOCHandler = async (req, res) => {
       req.user.user_id,
       req.user.fullName,
       null,
-      `Single LOC has been created with data: ${JSON.stringify(newLOC)}`,
+      `LOC has been created with data: ${JSON.stringify(newLOC)}`,
       "POST",
       "success",
       201
     );
 
     res.status(201).json({
-      message: "Single LOC created successfully..",
+      message: "LOC created successfully..",
       LOC: newLOC,
     });
   } catch (e) {
@@ -170,36 +173,37 @@ exports.createLOCHandler = async (req, res) => {
 
 exports.updateLOCHandler = async (req, res) => {
   try {
-    if (!uuid.validate(req.params.id)) {
-      await log(
-        req.user.user_id,
-        req.user.fullName,
-        null,
-        `Failed to update LOC with id (${req.params.id}) (Invalid ID)`,
-        "PATCH",
-        "error",
-        400
-      );
-      return res.status(400).json({ error: "Invalid Id!" });
-    }
+    // if (!uuid.validate(req.params.id)) {
+    //   await log(
+    //     req.user.user_id,
+    //     req.user.fullName,
+    //     null,
+    //     `Failed to update LOC with id (${req.params.id}) (Invalid ID)`,
+    //     "PATCH",
+    //     "error",
+    //     400
+    //   );
+    //   return res.status(400).json({ error: "Invalid Id!" });
+    // }
 
     const id = req.params.id;
+    let loc = req.locToUpdate;
 
     // check if the LOC exists in database
-    let loc = await findLOCById(id);
+    // let loc = await findLOCById(id);
 
-    if (!loc) {
-      await log(
-        req.user.user_id,
-        req.user.fullName,
-        null,
-        `Failed to update LOC with id (${id}) (doesn't exist)`,
-        "PATCH",
-        "error",
-        404
-      );
-      return res.status(404).json({ error: "LOC doesn't exist!" });
-    }
+    // if (!loc) {
+    //   await log(
+    //     req.user.user_id,
+    //     req.user.fullName,
+    //     null,
+    //     `Failed to update LOC with id (${id}) (doesn't exist)`,
+    //     "PATCH",
+    //     "error",
+    //     404
+    //   );
+    //   return res.status(404).json({ error: "LOC doesn't exist!" });
+    // }
     if (!Object.keys(req.body).length) {
       await log(
         req.user.user_id,
@@ -217,7 +221,6 @@ exports.updateLOCHandler = async (req, res) => {
       // check if the route_id exists in database
       let loc2 = await findLOCByRouteId(req.body.route_id);
       if (loc2 && loc2.loc_id != id) {
-        console.log(loc2);
         await log(
           req.user.user_id,
           req.user.fullName,
@@ -247,6 +250,9 @@ exports.updateLOCHandler = async (req, res) => {
       destination_field_1: req.body.destination_field_1,
       destination_field_2: req.body.destination_field_2,
       destination_field_3: req.body.destination_field_3,
+      longitude: req.body.longitude,
+      latitude: req.body.latitude,
+      radius: req.body.radius,
     };
 
     // validate the request first

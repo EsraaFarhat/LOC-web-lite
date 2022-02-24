@@ -3,6 +3,7 @@ const { v4: uuidv4 } = require("uuid");
 
 const LOC = require("../models/LOC");
 const LOCDestination = require("../models/LOC_destination");
+const User = require("../models/user");
 
 exports.findLOCById = async (id) => {
   try {
@@ -18,6 +19,25 @@ exports.findLOCByRouteId = async (route_id) => {
   try {
     const loc = await LOC.findOne({ where: { route_id } });
 
+    return loc;
+  } catch (e) {
+    throw new Error(e.message);
+  }
+};
+
+exports.getLOCWithUser = async (loc_id) => {
+  try {
+    const loc = await LOC.findOne({
+      where: { loc_id },
+      include: [
+        {
+          model: LOCDestination,
+        },
+        {
+          model: User,
+        },
+      ],
+    });
     return loc;
   } catch (e) {
     throw new Error(e.message);
@@ -134,6 +154,9 @@ exports.validateLOCDestination = (LOCDestination) => {
     destination_field_1: Joi.string().trim().max(200).required(),
     destination_field_2: Joi.string().trim().max(200).required(),
     destination_field_3: Joi.string().trim().max(200).required(),
+    longitude: Joi.number().required(),
+    latitude: Joi.number().required(),
+    radius: Joi.number().required(),
   });
   return schema.validate(LOCDestination, { abortEarly: false });
 };
@@ -144,6 +167,9 @@ exports.validateUpdateLOCDestination = (LOCDestination) => {
     destination_field_1: Joi.string().trim().max(200),
     destination_field_2: Joi.string().trim().max(200),
     destination_field_3: Joi.string().trim().max(200),
+    longitude: Joi.number(),
+    latitude: Joi.number(),
+    radius: Joi.number(),
   });
   return schema.validate(LOCDestination, { abortEarly: false });
 };

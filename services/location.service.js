@@ -1,11 +1,13 @@
-const uuid = require("uuid");
+// const uuid = require("uuid");
 
 const Location = require("../models/location");
-const { findProjectById } = require("../services/project.service");
-const {
-  findGlobalIdentifierById,
-} = require("../services/globalIdentifier.service");
-const { getLOCsByLocationId } = require("../services/LOC.service");
+// const User = require("../models/user");
+
+// const { findProjectById } = require("../services/project.service");
+// const {
+//   findGlobalIdentifierById,
+// } = require("../services/globalIdentifier.service");
+// const { getLOCsByLocationId } = require("../services/LOC.service");
 
 exports.findLocationById = async (id) => {
   try {
@@ -15,6 +17,22 @@ exports.findLocationById = async (id) => {
     throw new Error(e.message);
   }
 };
+
+// exports.getLocationWithUser = async (id) => {
+//   try {
+//     const location = await Location.findOne({
+//       where: { id },
+//       include: [
+//         {
+//           model: User,
+//         },
+//       ],
+//     });
+//     return location;
+//   } catch (e) {
+//     throw new Error(e.message);
+//   }
+// };
 
 exports.createLocation = async (request) => {
   try {
@@ -46,26 +64,26 @@ exports.getLocationsForProject = async (filter) => {
   }
 };
 
-exports.getLocationDataForUpload = async (id) => {
-  try {
-    if (!uuid.validate(id)) {
-      throw new Error("Invalid Id!");
-    }
+// exports.getLocationDataForUpload = async (id) => {
+//   try {
+//     if (!uuid.validate(id)) {
+//       throw new Error("Invalid Id!");
+//     }
 
-    const location = await this.findLocationById(id);
-    if (!location) {
-      throw new Error("Location doesn't exist!");
-    }
+//     const location = await this.findLocationById(id);
+//     if (!location) {
+//       throw new Error("Location doesn't exist!");
+//     }
 
-    const project = await findProjectById(location.project_id);
-    const globalIdentifier = await findGlobalIdentifierById(project.gid);
-    const LOCs = await getLOCsByLocationId(id);
+//     const project = await findProjectById(location.project_id);
+//     const globalIdentifier = await findGlobalIdentifierById(project.gid);
+//     const LOCs = await getLOCsByLocationId(id);
 
-    const singleLOCs = LOCs.filter((loc) => loc.LOC_type === "single");
-    const dualLOCs = LOCs.filter((loc) => loc.LOC_type === "dual");
+//     const singleLOCs = LOCs.filter((loc) => loc.LOC_type === "single");
+//     const dualLOCs = LOCs.filter((loc) => loc.LOC_type === "dual");
 
-    return ({ location, project, globalIdentifier, singleLOCs, dualLOCs });
-  } catch (e) {
-    throw new Error(e.message);
-  }
-};
+//     return ({ location, project, globalIdentifier, singleLOCs, dualLOCs });
+//   } catch (e) {
+//     throw new Error(e.message);
+//   }
+// };

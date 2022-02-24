@@ -1,8 +1,25 @@
 const Project = require("../models/project");
+const User = require("../models/user");
 
 exports.findProjectById = async (id) => {
   try {
     const project = await Project.findByPk(id);
+    return project;
+  } catch (e) {
+    throw new Error(e.message);
+  }
+};
+
+exports.getProjectWithUser = async (id) => {
+  try {
+    const project = await Project.findOne({
+      where: { id },
+      include: [
+        {
+          model: User,
+        },
+      ],
+    });
     return project;
   } catch (e) {
     throw new Error(e.message);

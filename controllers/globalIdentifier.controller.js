@@ -1,9 +1,12 @@
+const _ = require("lodash");
 const uuid = require("uuid");
+const sequelize = require("../db/postgres/db");
 const { log } = require("./log.controller");
 
 const {
   getAllGlobalIdentifiers,
   findGlobalIdentifierById,
+  getGlobalIdentifiers,
 } = require("../services/globalIdentifier.service");
 
 const {
@@ -20,9 +23,17 @@ exports.getAllGlobalIdentifiersHandler = async (req, res) => {
         "%" + req.query.name.toLowerCase() + "%"
       );
     }
-
-    const globalIdentifiers = await getAllGlobalIdentifiers(filter);
-
+    let globalIdentifiers;
+    if (req.user.role === "admin") {
+      globalIdentifiers = await getAllGlobalIdentifiers(filter);
+    } else {
+      globalIdentifiers = await getGlobalIdentifiers(filter, req.user);
+    }
+    globalIdentifiers = _.map(
+      globalIdentifiers,
+      (globalIdentifier) => _.pick(globalIdentifier),
+      ["gid", "name", "createdAt", "updatedAt", "User.user_id"]
+    );
     await log(
       req.user.user_id,
       req.user.fullName,
@@ -50,38 +61,38 @@ exports.getAllGlobalIdentifiersHandler = async (req, res) => {
 
 exports.getProjectsForGlobalIdentifierHandler = async (req, res) => {
   try {
-    if (!uuid.validate(req.params.gid)) {
-      await log(
-        req.user.user_id,
-        req.user.fullName,
-        null,
-        `Failed to Fetch Global Identifier with id (${req.params.gid})`,
-        "GET",
-        "error",
-        400
-      );
-      return res.status(400).json({ error: "Invalid Id!" });
-    }
+    // if (!uuid.validate(req.params.gid)) {
+    //   await log(
+    //     req.user.user_id,
+    //     req.user.fullName,
+    //     null,
+    //     `Failed to Fetch Global Identifier with id (${req.params.gid})`,
+    //     "GET",
+    //     "error",
+    //     400
+    //   );
+    //   return res.status(400).json({ error: "Invalid Id!" });
+    // }
 
     const gid = req.params.gid;
 
     // check if the global identifier exists in database
-    const globalIdentifier = await findGlobalIdentifierById(gid);
+    // const globalIdentifier = await findGlobalIdentifierById(gid);
 
-    if (!globalIdentifier) {
-      await log(
-        req.user.user_id,
-        req.user.fullName,
-        null,
-        `Failed to get all projects for Global Identifier with id (${gid}) (doesn't exist)`,
-        "GET",
-        "error",
-        404
-      );
-      return res
-        .status(404)
-        .json({ error: "Global Identifier doesn't exist!" });
-    }
+    // if (!globalIdentifier) {
+    //   await log(
+    //     req.user.user_id,
+    //     req.user.fullName,
+    //     null,
+    //     `Failed to get all projects for Global Identifier with id (${gid}) (doesn't exist)`,
+    //     "GET",
+    //     "error",
+    //     404
+    //   );
+    //   return res
+    //     .status(404)
+    //     .json({ error: "Global Identifier doesn't exist!" });
+    // }
 
     let filter = {};
     filter.gid = gid;

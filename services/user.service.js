@@ -44,10 +44,6 @@ exports.generateAuthToken = async (user) => {
     hashDigest = sha256(hashDigest);
     const token = Base64.stringify(hmacSHA512(path + hashDigest, privateKey));
 
-    // console.log(token);
-    // const token = jwt.sign({ user_id: user.user_id }, process.env.PRIVATE_KEY);
-    // user.tokens = user.tokens.concat({ token });
-
     user.token = token;
     await user.save();
 

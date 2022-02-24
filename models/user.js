@@ -3,6 +3,9 @@ const bcrypt = require("bcrypt");
 
 const sequelize = require("../db/postgres/db");
 const LOC = require("./LOC");
+const GlobalIdentifier = require("./globalidentifier");
+const Project = require("./project");
+const Location = require("./location");
 
 class User extends Model {
   async hashPassword(password) {
@@ -20,6 +23,9 @@ User.init(
       primaryKey: true,
       defaultValue: DataTypes.UUIDV4,
     },
+    // image: {
+    //   type: String,
+    // },
     fullName: {
       type: DataTypes.STRING(50),
       allowNull: false,
@@ -65,6 +71,36 @@ User.belongsTo(User, {
   as: "supervisor",
   onDelete: "CASCADE",
   onUpdate: "CASCADE",
+});
+
+User.hasMany(GlobalIdentifier, {
+  foreignKey: "user_id",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
+});
+
+GlobalIdentifier.belongsTo(User, {
+  foreignKey: "user_id",
+});
+
+User.hasMany(Project, {
+  foreignKey: "user_id",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
+});
+
+Project.belongsTo(User, {
+  foreignKey: "user_id",
+});
+
+User.hasMany(Location, {
+  foreignKey: "user_id",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
+});
+
+Location.belongsTo(User, {
+  foreignKey: "user_id",
 });
 
 User.hasMany(LOC, {

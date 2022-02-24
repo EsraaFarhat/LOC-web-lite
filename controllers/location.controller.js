@@ -70,7 +70,7 @@ exports.downloadLocationHandler = async (req, res) => {
     let globalIdentifier = await findGlobalIdentifierById(
       data.globalIdentifier.gid
     );
-    data.globalIdentifier.sync = true;
+    // data.globalIdentifier.sync = true;
     if (!globalIdentifier) {
       try {
         let globalIdentifier = await findGlobalIdentifier(
@@ -104,7 +104,7 @@ exports.downloadLocationHandler = async (req, res) => {
       }
     }
     let project = await findProjectById(data.project.id);
-    data.project.sync = true;
+    // data.project.sync = true;
     if (!project) {
       try {
         await createProject(data.project);
@@ -121,7 +121,7 @@ exports.downloadLocationHandler = async (req, res) => {
       }
     }
     let location = await findLocationById(data.location.id);
-    data.location.sync = true;
+    // data.location.sync = true;
     if (!location) {
       try {
         await createLocation(data.location);

@@ -33,6 +33,15 @@ LOCDestination.init(
     destination_field_3: {
       type: DataTypes.STRING(200),
     },
+    longitude: {
+      type: DataTypes.FLOAT(),
+    },
+    latitude: {
+      type: DataTypes.FLOAT(),
+    },
+    radius: {
+      type: DataTypes.FLOAT(),
+    },
     destination_sync: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,

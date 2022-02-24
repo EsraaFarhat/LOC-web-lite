@@ -5,6 +5,9 @@ const {
   getProjectsForGlobalIdentifierHandler,
 } = require("../controllers/globalIdentifier.controller");
 const auth = require("../middleware/auth");
+const {
+  canGetProjects,
+} = require("../middleware/globalIdentifier_permissions");
 
 const router = express.Router();
 
@@ -12,6 +15,10 @@ const router = express.Router();
 router.get("/", auth, getAllGlobalIdentifiersHandler);
 
 // Get all projects belong to a global identifier
-router.get("/:gid/projects", auth, getProjectsForGlobalIdentifierHandler);
+router.get(
+  "/:gid/projects",
+  [auth, canGetProjects],
+  getProjectsForGlobalIdentifierHandler
+);
 
 module.exports = router;

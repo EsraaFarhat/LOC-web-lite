@@ -7,7 +7,6 @@ require("dotenv").config();
 const auth = async (req, res, next) => {
   try {
     const authToken = req.header("Authorization").replace("Bearer ", "");
-    // console.log(authToken);
     const loggedInUser = await User.findOne({ where: { token: authToken } });
 
     const message = process.env.MESSAGE,
@@ -19,16 +18,10 @@ const auth = async (req, res, next) => {
     hashDigest = sha256(hashDigest);
     const token = Base64.stringify(hmacSHA512(path + hashDigest, privateKey));
 
-    // console.log(token);
-    // // const decoded = jwt.verify(authToken, process.env.PRIVATE_KEY);
-    // const user = await User.findOne({ where: { email: req.user.email } });
-    // console.log(user);
-    // // If the user was deleted or his token was deleted from the database
     if (!loggedInUser || token !== authToken) {
       throw new Error("Unable to authenticate!");
     }
 
-    // req.token = authToken;
     req.user = loggedInUser;
     next();
   } catch (e) {
