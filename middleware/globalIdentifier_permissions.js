@@ -7,7 +7,7 @@ const {
 
 exports.canGetProjects = async (req, res, next) => {
   try {
-    if(req.query.mode === "main"){
+    if (req.query.mode === "main") {
       return next();
     }
 
@@ -23,7 +23,6 @@ exports.canGetProjects = async (req, res, next) => {
       );
       return res.status(400).json({ error: "Invalid Id!" });
     }
-
 
     const gid = req.params.gid;
     const globalIdentifier = await getGlobalIdentifierWithUser(gid);
@@ -47,12 +46,27 @@ exports.canGetProjects = async (req, res, next) => {
      ** OR this global identifier wasn't created by your super user or any user in your company
      ** OR you are not the user created this global identifier
      */
+    let hasAccess = false;
+    if (req.user.role === "admin") {
+      hasAccess = true;
+    }
+    if (req.user.role === "super user") {
+      hasAccess =
+        globalIdentifier.User.user_id === req.user.user_id ||
+        globalIdentifier.User.sup_id === req.user.user_id;
+    } else if (req.user.role === "user") {
+      hasAccess =
+        globalIdentifier.User.user_id === req.user.user_id ||
+        globalIdentifier.User.sup_id !== req.user.sup_id ||
+        globalIdentifier.User.user_id !== req.user.sup_id;
+    }
 
     if (
-      req.user.role !== "admin" &&
-      globalIdentifier.User.sup_id !== req.user.sup_id &&
-      globalIdentifier.User.sup_id !== req.user.user_id &&
-      globalIdentifier.User.user_id !== req.user.user_id
+      !hasAccess
+      // req.user.role !== "admin" &&
+      // globalIdentifier.User.sup_id !== req.user.sup_id &&
+      // globalIdentifier.User.sup_id !== req.user.user_id &&
+      // globalIdentifier.User.user_id !== req.user.user_id
     ) {
       await log(
         req.user.user_id,

@@ -6,7 +6,8 @@ const { log } = require("./log.controller");
 const {
   getAllGlobalIdentifiers,
   findGlobalIdentifierById,
-  getGlobalIdentifiers,
+  getGlobalIdentifiersForSuperUser,
+  getGlobalIdentifiersForUser,
 } = require("../services/globalIdentifier.service");
 
 const {
@@ -57,16 +58,26 @@ exports.getAllGlobalIdentifiersHandler = async (req, res) => {
     }
 
     //            ****************Local server*****************
-    let globalIdentifiers;
-    if (req.user.role === "admin") {
-      globalIdentifiers = await getAllGlobalIdentifiers(filter);
+    // let globalIdentifiers;
+    // if (req.user.role === "admin") {
+    //   globalIdentifiers = await getAllGlobalIdentifiers(filter);
+    // } else
+    if (req.user.role === "super user") {
+      globalIdentifiers = await getGlobalIdentifiersForSuperUser(
+        filter,
+        req.user
+      );
     } else {
-      globalIdentifiers = await getGlobalIdentifiers(filter, req.user);
+      globalIdentifiers = await getGlobalIdentifiersForUser(filter, req.user);
     }
-    globalIdentifiers = _.map(
-      globalIdentifiers,
-      (globalIdentifier) => _.pick(globalIdentifier),
-      ["gid", "name", "createdAt", "updatedAt", "User.user_id"]
+    globalIdentifiers = _.map(globalIdentifiers, (globalIdentifier) =>
+      _.pick(globalIdentifier.dataValues, [
+        "gid",
+        "name",
+        "createdAt",
+        "updatedAt",
+        "user_id",
+      ])
     );
     await log(
       req.user.user_id,

@@ -28,9 +28,9 @@ exports.findUserByCredentials = async (email, password) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) throw new Error("Invalid email or password!");
 
-    return user;
+    return { user };
   } catch (e) {
-    throw new Error(e.message);
+    return { error: e.message };
   }
 };
 
@@ -45,7 +45,7 @@ exports.findUserById = async (id) => {
 
 exports.createUser = async (request) => {
   try {
-    const newUser = await User.create(request); //! sup_id!!
+    const newUser = await User.create(request);
 
     return newUser;
   } catch (e) {
@@ -106,12 +106,11 @@ exports.UserLoginToMainServerHandler = async (email, password) => {
   try {
     let response = await fetch(`${process.env.EC2_URL}/api/auth/login`, {
       method: "post",
-      body: JSON.stringify(email, password),
+      body: JSON.stringify({ email, password }),
       headers: {
         "Content-Type": "application/json",
       },
     });
-
     response = await response.json();
     if (response.error) {
       return {
@@ -120,7 +119,7 @@ exports.UserLoginToMainServerHandler = async (email, password) => {
       };
     }
 
-    return { message: "Logged in successfully.." };
+    return { message: "Logged in successfully..", user: response.user };
   } catch (e) {
     return { error: e.message };
   }
@@ -143,13 +142,18 @@ exports.updateUsersData = async (token) => {
     }
     let errors = [];
     response.users.forEach(async (user) => {
+      if (user.role === "super user") user.sup_id = null;
       let local_user = await this.findUserById(user.user_id);
       if (!local_user) {
         try {
           let user_with_email = await this.findUser(user.email);
           if (user_with_email) await this.deleteUser(user_with_email.user_id);
-          await this.createUser(user);
-          console.log("user created");
+          try {
+            await this.createUser(user);
+            console.log("user created");
+          } catch (e) {
+            return { error: e.message };
+          }
         } catch (e) {
           errors.push(`Couldn't create user ${user.user_id}: ${e.message}`);
         }
@@ -158,8 +162,12 @@ exports.updateUsersData = async (token) => {
           let user_with_email = await this.findUser(user.email);
           if (user_with_email && user_with_email.user_id !== local_user.user_id)
             await this.deleteUser(user_with_email.user_id);
-          await this.updateUser(local_user.user_id, user);
-          console.log("user updated");
+          try {
+            await this.updateUser(local_user.user_id, user);
+            console.log("user updated");
+          } catch (e) {
+            return { error: e.message };
+          }
         } catch (e) {
           errors.push(`Couldn't update user ${user.user_id}: ${e.message}`);
         }

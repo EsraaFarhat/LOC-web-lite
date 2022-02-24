@@ -16,7 +16,7 @@ exports.UpdateUsersDataHandler = async (req, res) => {
 
     const result = await updateUsersData(req.user.token);
     if (result.errors) {
-      return res.json({
+      return res.status(400).json({
         message: "Users updated with errors",
         errors: result.errors,
       });

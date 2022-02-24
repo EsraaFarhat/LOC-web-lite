@@ -113,16 +113,16 @@ LOC.belongsTo(User, {
   foreignKey: "user_id",
 });
 
-User.beforeCreate(async (user, options) => {
-  const hashedPassword = await user.hashPassword(user.password);
-  user.password = hashedPassword;
-});
+// User.beforeCreate(async (user, options) => {
+//   const hashedPassword = await user.hashPassword(user.password);
+//   user.password = hashedPassword;
+// });
 
-User.beforeUpdate(async (user, options) => {
-  if (user.changed("password")) {
-    const hashedPassword = await user.hashPassword(user.password);
-    user.password = hashedPassword;
-  }
-});
+// User.beforeUpdate(async (user, options) => {
+//   if (user.changed("password")) {
+//     const hashedPassword = await user.hashPassword(user.password);
+//     user.password = hashedPassword;
+//   }
+// });
 
 module.exports = User;

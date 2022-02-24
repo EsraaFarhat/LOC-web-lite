@@ -1,6 +1,6 @@
 const { log } = require("../controllers/log.controller");
 
-exports.isAdmin = async (req, res, next) => {
+exports.isSuperUser = async (req, res, next) => {
   if (req.user.role !== "super user") {
     await log(
       req.user.user_id,

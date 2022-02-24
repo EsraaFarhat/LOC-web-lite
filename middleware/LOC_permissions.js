@@ -5,10 +5,10 @@ const { getLOCWithUser } = require("../services/LOC.service");
 
 exports.canUpdate = async (req, res, next) => {
   try {
-    if(req.query.mode === "main"){
+    if (req.query.mode === "main") {
       return next();
     }
-    
+
     if (!uuid.validate(req.params.id)) {
       await log(
         req.user.user_id,
@@ -42,10 +42,22 @@ exports.canUpdate = async (req, res, next) => {
      ** OR you are not the super user to the user created this LOC
      ** OR you are not the user created this LOC
      */
+    let hasAccess = false;
+    if (req.user.role === "admin") {
+      hasAccess = true;
+    }
+    if (req.user.role === "super user") {
+      hasAccess =
+        loc.User.user_id === req.user.user_id ||
+        loc.User.sup_id === req.user.user_id;
+    } else if (req.user.role === "user") {
+      hasAccess = loc.User.user_id === req.user.user_id;
+    }
     if (
-      req.user.role !== "admin" &&
-      loc.User.sup_id !== req.user.user_id &&
-      loc.User.user_id !== req.user.user_id
+      !hasAccess
+      // req.user.role !== "admin" &&
+      // loc.User.sup_id !== req.user.user_id &&
+      // loc.User.user_id !== req.user.user_id
     ) {
       await log(
         req.user.user_id,

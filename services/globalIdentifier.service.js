@@ -23,7 +23,7 @@ exports.getAllGlobalIdentifiers = async (filter) => {
   }
 };
 
-exports.getGlobalIdentifiers = async (filter, loggedInUser) => {
+exports.getGlobalIdentifiersForSuperUser = async (filter, loggedInUser) => {
   try {
     const globalIdentifiers = await GlobalIdentifier.findAll({
       where: filter,
@@ -36,8 +36,28 @@ exports.getGlobalIdentifiers = async (filter, loggedInUser) => {
     return globalIdentifiers.filter(
       (gid) =>
         gid.User.user_id === loggedInUser.user_id ||
-        gid.User.sup_id === loggedInUser.user_id ||
-        gid.User.sup_id === loggedInUser.sup_id
+        gid.User.sup_id === loggedInUser.user_id
+    );
+  } catch (e) {
+    throw new Error(e.message);
+  }
+};
+
+exports.getGlobalIdentifiersForUser = async (filter, loggedInUser) => {
+  try {
+    const globalIdentifiers = await GlobalIdentifier.findAll({
+      where: filter,
+      include: [
+        {
+          model: User,
+        },
+      ],
+    });
+    return globalIdentifiers.filter(
+      (gid) =>
+        gid.User.user_id === loggedInUser.user_id ||
+        gid.User.sup_id === loggedInUser.sup_id ||
+        gid.User.user_id === loggedInUser.sup_id
     );
   } catch (e) {
     throw new Error(e.message);
