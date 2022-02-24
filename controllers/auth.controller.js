@@ -27,7 +27,8 @@ exports.LoginFromMain = async (req, error) => {
         );
         if (response.error) {
           resolve({
-            error: "Cannot login to the main server!",
+            error: response.error,
+            reason: response.reason,
           });
         } else {
           user = response.user;
@@ -90,7 +91,7 @@ exports.UserLoginHandler = async (req, res) => {
       token = await generateAuthToken(user);
     } else if (error) {
       const result = await this.LoginFromMain(req, error);
-      if (result.error) return res.status(400).json({ error: result.error });
+      if (result.error) return res.status(400).json({ error: result.error, reason: result.reason });
       user = result;
       token = result.token;
     }

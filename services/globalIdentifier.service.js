@@ -1,4 +1,5 @@
 const GlobalIdentifier = require("../models/globalidentifier");
+const User = require("../models/user");
 
 exports.findGlobalIdentifier = async (name) => {
   try {

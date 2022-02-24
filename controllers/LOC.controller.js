@@ -1,3 +1,5 @@
+const fetch = (...args) =>
+  import("node-fetch").then(({ default: fetch }) => fetch(...args));
 const _ = require("lodash");
 const uuid = require("uuid");
 const { log } = require("./log.controller");

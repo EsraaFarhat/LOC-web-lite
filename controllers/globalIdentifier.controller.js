@@ -1,3 +1,5 @@
+const fetch = (...args) =>
+  import("node-fetch").then(({ default: fetch }) => fetch(...args));
 const _ = require("lodash");
 const uuid = require("uuid");
 const sequelize = require("../db/postgres/db");
@@ -28,16 +30,16 @@ exports.getAllGlobalIdentifiersHandler = async (req, res) => {
 
     //            ****************Main server*****************
     if (req.query.mode === "main") {
-      let response = await UserLoginToMainServerHandler(
-        req.user.email,
-        req.user.password
-      );
-      if (response.error) {
-        return res.status(400).json({
-          error: "Cannot do this operation on the main server!",
-          reason: response.error,
-        });
-      }
+      // let response = await UserLoginToMainServerHandler(
+      //   req.user.email,
+      //   req.user.password
+      // );
+      // if (response.error) {
+      //   return res.status(400).json({
+      //     error: response.error,
+      //     reason: response.reason,
+      //   });
+      // }
 
       response = await fetch(
         `${process.env.EC2_URL}/api/globalIdentifiers?name=${req.query.name}`,
