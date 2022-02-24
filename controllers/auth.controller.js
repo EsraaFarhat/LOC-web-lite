@@ -4,11 +4,16 @@ const { log } = require("./log.controller");
 const {
   findUserByCredentials,
   generateAuthToken,
+  updateUsersData,
 } = require("../services/user.service");
 
 exports.UserLoginHandler = async (req, res) => {
   try {
     const user = await findUserByCredentials(req.body.email, req.body.password);
+
+    if (user.role === "admin") {
+      return res.status(400).json({ error: "Cannot login to the system!" });
+    }
 
     const token = await generateAuthToken(user);
 
@@ -22,9 +27,28 @@ exports.UserLoginHandler = async (req, res) => {
       200
     );
 
+    if (user.role === "super user") {
+      const response = await updateUsersData(token);
+      if (response.errors) {
+        return res.json({
+          user: _.pick(user, [
+            "user_id",
+            "fullName",
+            "email",
+            "role",
+            "sup_id",
+          ]),
+          token,
+          message: "Users updated with errors",
+          errors: response.errors,
+        });
+      }
+    }
+
     res.json({
       user: _.pick(user, ["user_id", "fullName", "email", "role", "sup_id"]),
       token,
+      message: "Users updated successfully..",
     });
   } catch (e) {
     res.status(400).json({ error: e.message });

@@ -6,6 +6,7 @@ const checkDiskSpace = require("check-disk-space").default;
 require("dotenv").config();
 
 const authRouter = require("./routes/auth");
+const userRouter = require("./routes/user");
 const globalIdentifierRouter = require("./routes/globalIdentifier");
 const projectRouter = require("./routes/project");
 const LocationRouter = require("./routes/location");
@@ -44,6 +45,7 @@ app.use(express.json());
 app.use(cors());
 
 app.use("/api/auth", authRouter);
+app.use("/api/users", userRouter);
 app.use("/api/globalIdentifiers", globalIdentifierRouter);
 app.use("/api/projects", projectRouter);
 app.use("/api/locations", LocationRouter);
