@@ -7,6 +7,10 @@ const {
 
 exports.canGetProjects = async (req, res, next) => {
   try {
+    if(req.query.mode === "main"){
+      return next();
+    }
+
     if (!uuid.validate(req.params.gid)) {
       await log(
         req.user.user_id,
@@ -19,6 +23,7 @@ exports.canGetProjects = async (req, res, next) => {
       );
       return res.status(400).json({ error: "Invalid Id!" });
     }
+
 
     const gid = req.params.gid;
     const globalIdentifier = await getGlobalIdentifierWithUser(gid);

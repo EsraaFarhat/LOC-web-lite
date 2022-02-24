@@ -30,11 +30,23 @@ const {
   createProject,
   updateProject,
 } = require("../services/project.service");
+const { UserLoginToMainServerHandler } = require("../services/user.service");
 
 const { log } = require("./log.controller");
 
 exports.downloadLocationHandler = async (req, res) => {
   try {
+    let response = await UserLoginToMainServerHandler(
+      req.user.email,
+      req.user.password
+    );
+    if (response.error) {
+      return res.status(400).json({
+        error: "Cannot do this operation on the main server!",
+        reason: response.error,
+      });
+    }
+
     if (!uuid.validate(req.params.id)) {
       await log(
         req.user.user_id,
@@ -50,7 +62,7 @@ exports.downloadLocationHandler = async (req, res) => {
 
     const id = req.params.id;
 
-    const response = await fetch(
+    response = await fetch(
       `${process.env.EC2_URL}/api/locations/${id}/download`,
       {
         headers: {
@@ -366,6 +378,17 @@ exports.uploadLOCs = async (data) => {
 
 exports.uploadLocationHandler = async (req, res) => {
   try {
+    let response = await UserLoginToMainServerHandler(
+      req.user.email,
+      req.user.password
+    );
+    if (response.error) {
+      return res.status(400).json({
+        error: "Cannot do this operation on the main server!",
+        reason: response.error,
+      });
+    }
+
     if (!uuid.validate(req.params.id)) {
       await log(
         req.user.user_id,

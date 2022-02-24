@@ -5,6 +5,10 @@ const { getLOCWithUser } = require("../services/LOC.service");
 
 exports.canUpdate = async (req, res, next) => {
   try {
+    if(req.query.mode === "main"){
+      return next();
+    }
+    
     if (!uuid.validate(req.params.id)) {
       await log(
         req.user.user_id,

@@ -5,6 +5,10 @@ const { getProjectWithUser } = require("../services/project.service");
 
 exports.canGetLocations = async (req, res, next) => {
   try {
+    if(req.query.mode === "main"){
+      return next();
+    }
+    
     if (!uuid.validate(req.params.id)) {
       await log(
         req.user.user_id,

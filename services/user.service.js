@@ -1,3 +1,5 @@
+const fetch = (...args) =>
+  import("node-fetch").then(({ default: fetch }) => fetch(...args));
 const sha256 = require("crypto-js/sha256");
 const hmacSHA512 = require("crypto-js/hmac-sha512");
 const Base64 = require("crypto-js/enc-base64");
@@ -50,5 +52,29 @@ exports.generateAuthToken = async (user) => {
     return token;
   } catch (e) {
     throw new Error(e.message);
+  }
+};
+
+exports.UserLoginToMainServerHandler = async (email, password) => {
+  try {
+    let response = await fetch(`${process.env.EC2_URL}/api/auth/login`, {
+      method: "post",
+      body: JSON.stringify(email, password),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    response = await response.json();
+    if (response.error) {
+      return {
+        error: `Couldn't login to the main server!`,
+        reason: response.error,
+      };
+    }
+
+    return { message: "Logged in successfully.." };
+  } catch (e) {
+    return { error: e.message };
   }
 };

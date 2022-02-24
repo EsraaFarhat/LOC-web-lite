@@ -12,6 +12,7 @@ const {
 const {
   getProjectsForGlobalIdentifier,
 } = require("../services/project.service");
+const { UserLoginToMainServerHandler } = require("../services/user.service");
 
 exports.getAllGlobalIdentifiersHandler = async (req, res) => {
   try {
@@ -23,6 +24,39 @@ exports.getAllGlobalIdentifiersHandler = async (req, res) => {
         "%" + req.query.name.toLowerCase() + "%"
       );
     }
+
+    //            ****************Main server*****************
+    if (req.query.mode === "main") {
+      let response = await UserLoginToMainServerHandler(
+        req.user.email,
+        req.user.password
+      );
+      if (response.error) {
+        return res.status(400).json({
+          error: "Cannot do this operation on the main server!",
+          reason: response.error,
+        });
+      }
+
+      response = await fetch(
+        `${process.env.EC2_URL}/api/globalIdentifiers?name=${req.query.name}`,
+        {
+          headers: {
+            Authorization: `Bearer ${req.user.token}`,
+          },
+        }
+      );
+      const data = await response.json();
+      if (data.error) {
+        return res.status(400).json({
+          error: "Cannot do this operation on the main server!",
+          reason: data.error,
+        });
+      }
+      return res.json({ globalIdentifiers: data.globalIdentifiers });
+    }
+
+    //            ****************Local server*****************
     let globalIdentifiers;
     if (req.user.role === "admin") {
       globalIdentifiers = await getAllGlobalIdentifiers(filter);
@@ -104,6 +138,38 @@ exports.getProjectsForGlobalIdentifierHandler = async (req, res) => {
       );
     }
 
+    //            ****************Main server*****************
+    if (req.query.mode === "main") {
+      let response = await UserLoginToMainServerHandler(
+        req.user.email,
+        req.user.password
+      );
+      if (response.error) {
+        return res.status(400).json({
+          error: "Cannot do this operation on the main server!",
+          reason: response.error,
+        });
+      }
+
+      response = await fetch(
+        `${process.env.EC2_URL}/api/globalIdentifiers/${gid}/projects?name=${req.query.name}`,
+        {
+          headers: {
+            Authorization: `Bearer ${req.user.token}`,
+          },
+        }
+      );
+      const data = await response.json();
+      if (data.error) {
+        return res.status(400).json({
+          error: "Cannot do this operation on the main server!",
+          reason: data.error,
+        });
+      }
+      return res.json({ projects: data.projects });
+    }
+
+    //            ****************Local server*****************
     const projects = await getProjectsForGlobalIdentifier(filter);
 
     await log(

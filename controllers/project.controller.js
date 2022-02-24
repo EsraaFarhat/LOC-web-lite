@@ -4,6 +4,7 @@ const { log } = require("./log.controller");
 
 const { findProjectById } = require("../services/project.service");
 const { getLocationsForProject } = require("../services/location.service");
+const { UserLoginToMainServerHandler } = require("../services/user.service");
 
 exports.getLocationsForProjectHandler = async (req, res) => {
   try {
@@ -46,6 +47,38 @@ exports.getLocationsForProjectHandler = async (req, res) => {
       );
     }
 
+    //            ****************Main server*****************
+    if (req.query.mode === "main") {
+      let response = await UserLoginToMainServerHandler(
+        req.user.email,
+        req.user.password
+      );
+      if (response.error) {
+        return res.status(400).json({
+          error: "Cannot do this operation on the main server!",
+          reason: response.error,
+        });
+      }
+
+      response = await fetch(
+        `${process.env.EC2_URL}/api/projects/${project_id}/locations?name=${req.query.name}`,
+        {
+          headers: {
+            Authorization: `Bearer ${req.user.token}`,
+          },
+        }
+      );
+      const data = await response.json();
+      if (data.error) {
+        return res.status(400).json({
+          error: "Cannot do this operation on the main server!",
+          reason: data.error,
+        });
+      }
+      return res.json({ locations: data.locations });
+    }
+
+    //            ****************Local server*****************
     const locations = await getLocationsForProject(filter);
 
     await log(

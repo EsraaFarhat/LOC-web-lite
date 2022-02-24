@@ -15,9 +15,46 @@ const {
   updateLOCDestination,
 } = require("../services/LOC.service");
 const { findLocationById } = require("../services/location.service");
+const { UserLoginToMainServerHandler } = require("../services/user.service");
 
 exports.createLOCHandler = async (req, res) => {
   try {
+    //            ****************Main server*****************
+    if (req.query.mode === "main") {
+      let response = await UserLoginToMainServerHandler(
+        req.user.email,
+        req.user.password
+      );
+      if (response.error) {
+        return res.status(400).json({
+          error: "Cannot do this operation on the main server!",
+          reason: response.error,
+        });
+      }
+
+      response = await fetch(
+        `${process.env.EC2_URL}/api/LOCs`,
+        {
+          method: "post",
+          body: JSON.stringify(req.body),
+          headers: {
+            Authorization: `Bearer ${req.user.token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const data = await response.json();
+      if (data.error) {
+        return res.status(400).json({
+          error: "Cannot do this operation on the main server!",
+          reason: data.error,
+        });
+      }
+
+      return res.json({ message: data.message, loc: data.Loc });
+    }
+
+    //            ****************Local server*****************
     const locBody = {
       route_id: req.body.route_id,
       origin: req.body.origin,
@@ -82,7 +119,7 @@ exports.createLOCHandler = async (req, res) => {
     if (loc) {
       await log(
         req.user.user_id,
-        req.user.fullName,
+        req.user.fupatchllName,
         null,
         `Failed to create LOC (route id already exists)`,
         "POST",
@@ -187,6 +224,43 @@ exports.updateLOCHandler = async (req, res) => {
     // }
 
     const id = req.params.id;
+
+    //            ****************Main server*****************
+    if (req.query.mode === "main") {
+      let response = await UserLoginToMainServerHandler(
+        req.user.email,
+        req.user.password
+      );
+      if (response.error) {
+        return res.status(400).json({
+          error: "Cannot do this operation on the main server!",
+          reason: response.error,
+        });
+      }
+
+      response = await fetch(
+        `${process.env.EC2_URL}/api/LOCs/${id}`,
+        {
+          method: "patch",
+          body: JSON.stringify(req.body),
+          headers: {
+            Authorization: `Bearer ${req.user.token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const data = await response.json();
+      if (data.error) {
+        return res.status(400).json({
+          error: "Cannot do this operation on the main server!",
+          reason: data.error,
+        });
+      }
+
+      return res.json({ message: data.message, loc: data.loc });
+    }
+
+    //            ****************Local server*****************
     let loc = req.locToUpdate;
 
     // check if the LOC exists in database
