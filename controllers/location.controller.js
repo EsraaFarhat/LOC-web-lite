@@ -36,16 +36,16 @@ const { log } = require("./log.controller");
 
 exports.downloadLocationHandler = async (req, res) => {
   try {
-    let response = await UserLoginToMainServerHandler(
-      req.user.email,
-      req.user.password
-    );
-    if (response.error) {
-      return res.status(400).json({
-        error: "Cannot do this operation on the main server!",
-        reason: response.error,
-      });
-    }
+    // let response = await UserLoginToMainServerHandler(
+    //   req.user.email,
+    //   req.user.password
+    // );
+    // if (response.error) {
+    //   return res.status(400).json({
+    //     error: "Cannot do this operation on the main server!",
+    //     reason: response.error,
+    //   });
+    // }
 
     if (!uuid.validate(req.params.id)) {
       await log(
@@ -378,16 +378,16 @@ exports.uploadLOCs = async (data) => {
 
 exports.uploadLocationHandler = async (req, res) => {
   try {
-    let response = await UserLoginToMainServerHandler(
-      req.user.email,
-      req.user.password
-    );
-    if (response.error) {
-      return res.status(400).json({
-        error: "Cannot do this operation on the main server!",
-        reason: response.error,
-      });
-    }
+    // let response = await UserLoginToMainServerHandler(
+    //   req.user.email,
+    //   req.user.password
+    // );
+    // if (response.error) {
+    //   return res.status(400).json({
+    //     error: "Cannot do this operation on the main server!",
+    //     reason: response.error,
+    //   });
+    // }
 
     if (!uuid.validate(req.params.id)) {
       await log(
