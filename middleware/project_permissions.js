@@ -14,10 +14,8 @@ exports.canGetLocations = async (req, res, next) => {
         req.user.user_id,
         req.user.fullName,
         null,
-        `Failed to get locations for project with id (${req.params.id})`,
-        "GET",
-        "error",
-        400
+        `Failed to get project with id (${req.params.id})`,
+        "GET"
       );
       return res.status(400).json({ error: "Invalid Id!" });
     }
@@ -29,10 +27,8 @@ exports.canGetLocations = async (req, res, next) => {
         req.user.user_id,
         req.user.fullName,
         null,
-        `Failed to get locations for project with id (${project_id}) (doesn't exist)`,
-        "GET",
-        "error",
-        404
+        `Failed to get project with id (${req.params.id})`,
+        "GET"
       );
       return res.status(404).json({ error: "Project doesn't exist!" });
     }
@@ -67,9 +63,8 @@ exports.canGetLocations = async (req, res, next) => {
         req.user.user_id,
         req.user.fullName,
         null,
-        `Failed to get locations for Project with id (${project_id})`,
-        "error",
-        400
+        `Failed to get project with id (${req.params.id})`,
+        "GET"
       );
       return res
         .status(400)
@@ -78,6 +73,13 @@ exports.canGetLocations = async (req, res, next) => {
 
     next();
   } catch (e) {
+    await log(
+      req.user.user_id,
+      req.user.fullName,
+      null,
+      `Failed to get project with id (${req.params.id})`,
+      "GET"
+    );
     return res.status(500).json({ error: e.message });
   }
 };

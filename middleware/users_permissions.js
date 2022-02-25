@@ -7,9 +7,7 @@ exports.isSuperUser = async (req, res, next) => {
       req.user.fullName,
       null,
       `Permission denied`,
-      null,
-      "error",
-      403
+      "POST",
     );
     return res.status(403).json({ error: "Permission denied!" });
   }

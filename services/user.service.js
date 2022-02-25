@@ -180,3 +180,11 @@ exports.updateUsersData = async (token) => {
     return { error: e.message };
   }
 };
+
+exports.validateLogin = (user) => {
+  const schema = Joi.object({
+    email: Joi.string().trim().max(255).required().email(),
+    password: Joi.string().trim().min(5).max(255).required(),
+  });
+  return schema.validate(user, { abortEarly: false });
+};

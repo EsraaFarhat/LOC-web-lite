@@ -23,36 +23,47 @@ exports.createLOCHandler = async (req, res) => {
   try {
     //            ****************Main server*****************
     if (req.query.mode === "main") {
-      let response = await UserLoginToMainServerHandler(
-        req.user.email,
-        req.user.password
-      );
-      if (response.error) {
-        return res.status(400).json({
-          error: "Cannot do this operation on the main server!",
-          reason: response.error,
-        });
-      }
+      // let response = await UserLoginToMainServerHandler(
+      //   req.user.email,
+      //   req.user.password
+      // );
+      // if (response.error) {
+      //   return res.status(400).json({
+      //     error: "Cannot do this operation on the main server!",
+      //     reason: response.error,
+      //   });
+      // }
 
-      response = await fetch(
-        `${process.env.EC2_URL}/api/LOCs`,
-        {
-          method: "post",
-          body: JSON.stringify(req.body),
-          headers: {
-            Authorization: `Bearer ${req.user.token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      response = await fetch(`${process.env.EC2_URL}/api/LOCs`, {
+        method: "post",
+        body: JSON.stringify(req.body),
+        headers: {
+          Authorization: `Bearer ${req.user.token}`,
+          "Content-Type": "application/json",
+        },
+      });
       const data = await response.json();
       if (data.error) {
+        await log(
+          req.user.user_id,
+          req.user.fullName,
+          null,
+          `Failed to Create LOC on main server`,
+          "POST"
+        );
         return res.status(400).json({
           error: "Cannot do this operation on the main server!",
           reason: data.error,
         });
       }
 
+      await log(
+        req.user.user_id,
+        req.user.fullName,
+        null,
+        `Create LOC on main server`,
+        "POST"
+      );
       return res.json({ message: data.message, loc: data.Loc });
     }
 
@@ -84,10 +95,8 @@ exports.createLOCHandler = async (req, res) => {
         req.user.user_id,
         req.user.fullName,
         null,
-        `Failed to create LOC (Validation error)`,
-        "POST",
-        "error",
-        400
+        `Failed to create LOC on local server (Validation error)`,
+        "POST"
       );
       return res.status(400).json({
         error: _.map(error.details, (detail) => _.pick(detail, ["message"])),
@@ -105,10 +114,8 @@ exports.createLOCHandler = async (req, res) => {
           req.user.user_id,
           req.user.fullName,
           null,
-          `Failed to create dual LOC (Destination validation error)`,
-          "POST",
-          "error",
-          400
+          `Failed to create dual LOC on local server (Destination validation error)`,
+          "POST"
         );
         return res.status(400).json({
           error: _.map(error.details, (detail) => _.pick(detail, ["message"])),
@@ -121,12 +128,10 @@ exports.createLOCHandler = async (req, res) => {
     if (loc) {
       await log(
         req.user.user_id,
-        req.user.fupatchllName,
+        req.user.fullName,
         null,
-        `Failed to create LOC (route id already exists)`,
-        "POST",
-        "error",
-        400
+        `Failed to create LOC on local server(route id already exists)`,
+        "POST"
       );
       return res.status(400).json({ error: "This route id already exists!" });
     }
@@ -140,10 +145,8 @@ exports.createLOCHandler = async (req, res) => {
         req.user.user_id,
         req.user.fullName,
         null,
-        `Failed to create LOC (Location doesn't exist)`,
-        "POST",
-        "error",
-        404
+        `Failed to create LOC on local server (Location doesn't exist)`,
+        "POST"
       );
       return res
         .status(404)
@@ -166,13 +169,11 @@ exports.createLOCHandler = async (req, res) => {
         req.user.user_id,
         req.user.fullName,
         null,
-        `Dual LOC has been created with data: ${JSON.stringify({
+        `Dual LOC has been created on local server with data: ${JSON.stringify({
           ...newLOC.dataValues,
           ...destination.dataValues,
         })}`,
-        "POST",
-        "success",
-        201
+        "POST"
       );
 
       return res.status(201).json({
@@ -185,10 +186,10 @@ exports.createLOCHandler = async (req, res) => {
       req.user.user_id,
       req.user.fullName,
       null,
-      `LOC has been created with data: ${JSON.stringify(newLOC)}`,
-      "POST",
-      "success",
-      201
+      `LOC has been created on local server with data: ${JSON.stringify(
+        newLOC
+      )}`,
+      "POST"
     );
 
     res.status(201).json({
@@ -201,9 +202,7 @@ exports.createLOCHandler = async (req, res) => {
       req.user.fullName,
       null,
       `Failed to create LOC`,
-      "POST",
-      "error",
-      500
+      "POST"
     );
 
     res.status(500).json({ error: e.message });
@@ -212,83 +211,64 @@ exports.createLOCHandler = async (req, res) => {
 
 exports.updateLOCHandler = async (req, res) => {
   try {
-    // if (!uuid.validate(req.params.id)) {
-    //   await log(
-    //     req.user.user_id,
-    //     req.user.fullName,
-    //     null,
-    //     `Failed to update LOC with id (${req.params.id}) (Invalid ID)`,
-    //     "PATCH",
-    //     "error",
-    //     400
-    //   );
-    //   return res.status(400).json({ error: "Invalid Id!" });
-    // }
-
     const id = req.params.id;
 
     //            ****************Main server*****************
     if (req.query.mode === "main") {
-      let response = await UserLoginToMainServerHandler(
-        req.user.email,
-        req.user.password
-      );
-      if (response.error) {
-        return res.status(400).json({
-          error: "Cannot do this operation on the main server!",
-          reason: response.error,
-        });
-      }
+      // let response = await UserLoginToMainServerHandler(
+      //   req.user.email,
+      //   req.user.password
+      // );
+      // if (response.error) {
+      //   return res.status(400).json({
+      //     error: "Cannot do this operation on the main server!",
+      //     reason: response.error,
+      //   });
+      // }
 
-      response = await fetch(
-        `${process.env.EC2_URL}/api/LOCs/${id}`,
-        {
-          method: "patch",
-          body: JSON.stringify(req.body),
-          headers: {
-            Authorization: `Bearer ${req.user.token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      response = await fetch(`${process.env.EC2_URL}/api/LOCs/${id}`, {
+        method: "patch",
+        body: JSON.stringify(req.body),
+        headers: {
+          Authorization: `Bearer ${req.user.token}`,
+          "Content-Type": "application/json",
+        },
+      });
       const data = await response.json();
       if (data.error) {
+        await log(
+          req.user.user_id,
+          req.user.fullName,
+          null,
+          `Failed to Update LOC on main server`,
+          "PATCH"
+        );
         return res.status(400).json({
           error: "Cannot do this operation on the main server!",
           reason: data.error,
         });
       }
 
+      await log(
+        req.user.user_id,
+        req.user.fullName,
+        null,
+        `Update LOC on main server`,
+        "PATCH"
+      );
       return res.json({ message: data.message, loc: data.loc });
     }
 
     //            ****************Local server*****************
     let loc = req.locToUpdate;
 
-    // check if the LOC exists in database
-    // let loc = await findLOCById(id);
-
-    // if (!loc) {
-    //   await log(
-    //     req.user.user_id,
-    //     req.user.fullName,
-    //     null,
-    //     `Failed to update LOC with id (${id}) (doesn't exist)`,
-    //     "PATCH",
-    //     "error",
-    //     404
-    //   );
-    //   return res.status(404).json({ error: "LOC doesn't exist!" });
-    // }
     if (!Object.keys(req.body).length) {
       await log(
         req.user.user_id,
         req.user.fullName,
         null,
-        `Nothing to update in this LOC`,
-        "PATCH",
-        "info",
-        200
+        `Nothing to update in this LOC on local server`,
+        "PATCH"
       );
       return res.json({ message: "There is nothing to update!" });
     }
@@ -301,10 +281,8 @@ exports.updateLOCHandler = async (req, res) => {
           req.user.user_id,
           req.user.fullName,
           null,
-          `Failed to update LOC (route id already exists)`,
-          "PATCH",
-          "error",
-          400
+          `Failed to update LOC on local server (route id already exists)`,
+          "PATCH"
         );
         return res
           .status(400)
@@ -339,16 +317,14 @@ exports.updateLOCHandler = async (req, res) => {
         req.user.user_id,
         req.user.fullName,
         null,
-        `Failed to update LOC (Validation error)`,
-        "PATCH",
-        "error",
-        400
+        `Failed to update LOC on local server (Validation error)`,
+        "PATCH"
       );
       return res.status(400).json({
         error: _.map(error.details, (detail) => _.pick(detail, ["message"])),
       });
     }
-    if(!locBody.sync) locBody.sync = false;
+    if (!locBody.sync) locBody.sync = false;
     updatedLOC = await updateLOC(id, locBody);
 
     if (loc.LOC_type === "dual" && Object.keys(destinationBody).length) {
@@ -358,17 +334,16 @@ exports.updateLOCHandler = async (req, res) => {
           req.user.user_id,
           req.user.fullName,
           null,
-          `Failed to update dual LOC (Destination validation error)`,
-          "PATCH",
-          "error",
-          400
+          `Failed to update dual LOC on local server (Destination validation error)`,
+          "PATCH"
         );
         return res.status(400).json({
           error: _.map(error.details, (detail) => _.pick(detail, ["message"])),
         });
       }
 
-    if(!destinationBody.destination_sync) destinationBody.destination_sync = false;
+      if (!destinationBody.destination_sync)
+        destinationBody.destination_sync = false;
       const updatedDestination = await updateLOCDestination(
         id,
         destinationBody
@@ -378,10 +353,10 @@ exports.updateLOCHandler = async (req, res) => {
         req.user.user_id,
         req.user.fullName,
         null,
-        `Update dual LOC (${id}) with data ${JSON.stringify(req.body)}`,
-        "PATCH",
-        "success",
-        200
+        `Update dual LOC (${id}) on local server with data ${JSON.stringify(
+          req.body
+        )}`,
+        "PATCH"
       );
 
       if (updatedLOC[1]) {
@@ -407,10 +382,10 @@ exports.updateLOCHandler = async (req, res) => {
       req.user.user_id,
       req.user.fullName,
       null,
-      `Update LOC (${id}) with data ${JSON.stringify(req.body)}`,
-      "PATCH",
-      "success",
-      200
+      `Update LOC (${id}) on local server with data ${JSON.stringify(
+        req.body
+      )}`,
+      "PATCH"
     );
 
     res.json({
@@ -423,9 +398,7 @@ exports.updateLOCHandler = async (req, res) => {
       req.user.fullName,
       null,
       `Failed to update LOC`,
-      "PATCH",
-      "error",
-      500
+      "PATCH"
     );
     res.status(500).json({ error: e.message });
   }

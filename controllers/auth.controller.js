@@ -13,6 +13,7 @@ const {
   UserLoginToMainServerHandler,
   createUser,
   findUserById,
+  validateLogin,
 } = require("../services/user.service");
 
 exports.LoginFromMain = async (req, error) => {
@@ -32,9 +33,15 @@ exports.LoginFromMain = async (req, error) => {
           });
         } else {
           user = response.user;
+          if (user.role === "admin") {
+            resolve({
+              error: "Cannot login to the server!",
+            });
+          }
           const salt = await bcrypt.genSalt(10);
           const hashedPassword = await bcrypt.hash(req.body.password, salt);
           user.password = hashedPassword;
+
           const message = process.env.MESSAGE,
             nonce = user.email,
             path = "PathTONoWhere",
@@ -79,6 +86,20 @@ exports.LoginFromMain = async (req, error) => {
 
 exports.UserLoginHandler = async (req, res) => {
   try {
+    // validate the request first
+    const { error } = validateLogin(req.body);
+    if (error) {
+      await log(
+        null,
+        null,
+        null,
+        `Failed to login user ${req.body.email} (Validation error)`,
+        "POST"
+      );
+      return res.status(400).json({
+        error: _.map(error.details, (detail) => _.pick(detail, ["message"])),
+      });
+    }
     let { user, error } = await findUserByCredentials(
       req.body.email,
       req.body.password
@@ -91,7 +112,18 @@ exports.UserLoginHandler = async (req, res) => {
       token = await generateAuthToken(user);
     } else if (error) {
       const result = await this.LoginFromMain(req, error);
-      if (result.error) return res.status(400).json({ error: result.error, reason: result.reason });
+      if (result.error) {
+        await log(
+          null,
+          null,
+          null,
+          `Failed to login user ${req.body.email}`,
+          "POST"
+        );
+        return res
+          .status(400)
+          .json({ error: result.error, reason: result.reason });
+      }
       user = result;
       token = result.token;
     }
@@ -101,14 +133,20 @@ exports.UserLoginHandler = async (req, res) => {
       user.fullName,
       null,
       `User ${user.email} logged in`,
-      "POST",
-      "success",
-      200
+      "POST"
     );
 
     if (user.role === "super user") {
       const response = await updateUsersData(token);
       if (response.errors) {
+        await log(
+          user.user_id,
+          user.fullName,
+          null,
+          `Failed to update all users for user ${user.user_id}`,
+          "POST"
+        );
+
         return res.json({
           user: _.pick(user, [
             "user_id",
@@ -122,6 +160,13 @@ exports.UserLoginHandler = async (req, res) => {
           errors: response.errors,
         });
       }
+      await log(
+        user.user_id,
+        user.fullName,
+        null,
+        `Update all users for user ${user.user_id}`,
+        "POST"
+      );
       return res.json({
         user: _.pick(user, ["user_id", "fullName", "email", "role", "sup_id"]),
         token,
@@ -134,39 +179,13 @@ exports.UserLoginHandler = async (req, res) => {
       token,
     });
   } catch (e) {
+    await log(
+      null,
+      null,
+      null,
+      `Failed to login user ${req.body.email}`,
+      "POST"
+    );
     res.status(400).json({ error: e.message });
-  }
-};
-
-exports.UserLogoutHandler = async (req, res) => {
-  try {
-    req.user.token = "";
-    // req.user.tokens = req.user.tokens.filter(
-    //   (token) => token.token !== req.token
-    // );
-    await req.user.save();
-
-    await log(
-      req.user.user_id,
-      req.user.fullName,
-      null,
-      `User ${req.user.email} logged out`,
-      "POST",
-      "success",
-      200
-    );
-
-    res.json({ message: "Logged out successfully.." });
-  } catch (e) {
-    await log(
-      req.user.user_id,
-      req.user.fullName,
-      null,
-      `Failed to logout user: ${req.user.email}`,
-      "POST",
-      "error",
-      500
-    );
-    res.status(500).json({ error: e.message });
   }
 };

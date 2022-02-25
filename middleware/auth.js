@@ -25,6 +25,13 @@ const auth = async (req, res, next) => {
     req.user = loggedInUser;
     next();
   } catch (e) {
+    await log(
+      null,
+      null,
+      null,
+      `Failed to login user`,
+      "POST"
+    );
     res.status(401).json({ error: "Unable to authenticate!" });
   }
 };

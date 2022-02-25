@@ -1,13 +1,10 @@
 const fetch = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args));
 const _ = require("lodash");
-const uuid = require("uuid");
 const sequelize = require("../db/postgres/db");
 const { log } = require("./log.controller");
 
 const {
-  getAllGlobalIdentifiers,
-  findGlobalIdentifierById,
   getGlobalIdentifiersForSuperUser,
   getGlobalIdentifiersForUser,
 } = require("../services/globalIdentifier.service");
@@ -30,17 +27,6 @@ exports.getAllGlobalIdentifiersHandler = async (req, res) => {
 
     //            ****************Main server*****************
     if (req.query.mode === "main") {
-      // let response = await UserLoginToMainServerHandler(
-      //   req.user.email,
-      //   req.user.password
-      // );
-      // if (response.error) {
-      //   return res.status(400).json({
-      //     error: response.error,
-      //     reason: response.reason,
-      //   });
-      // }
-
       response = await fetch(
         `${process.env.EC2_URL}/api/globalIdentifiers?name=${req.query.name}`,
         {
@@ -51,19 +37,29 @@ exports.getAllGlobalIdentifiersHandler = async (req, res) => {
       );
       const data = await response.json();
       if (data.error) {
+        await log(
+          req.user.user_id,
+          req.user.fullName,
+          null,
+          `Failed to fetch all global identifiers from main server`,
+          "GET"
+        );
         return res.status(400).json({
           error: "Cannot do this operation on the main server!",
           reason: data.error,
         });
       }
+      await log(
+        req.user.user_id,
+        req.user.fullName,
+        null,
+        `Get all global identifiers from main server`,
+        "GET"
+      );
       return res.json({ globalIdentifiers: data.globalIdentifiers });
     }
 
     //            ****************Local server*****************
-    // let globalIdentifiers;
-    // if (req.user.role === "admin") {
-    //   globalIdentifiers = await getAllGlobalIdentifiers(filter);
-    // } else
     if (req.user.role === "super user") {
       globalIdentifiers = await getGlobalIdentifiersForSuperUser(
         filter,
@@ -85,10 +81,8 @@ exports.getAllGlobalIdentifiersHandler = async (req, res) => {
       req.user.user_id,
       req.user.fullName,
       null,
-      `Fetch All Global Identifiers`,
-      "GET",
-      "success",
-      200
+      `Fetch All Global Identifiers From local server`,
+      "GET"
     );
 
     res.json({ globalIdentifiers });
@@ -98,9 +92,7 @@ exports.getAllGlobalIdentifiersHandler = async (req, res) => {
       req.user.fullName,
       null,
       `Failed to Fetch All Global Identifiers`,
-      "GET",
-      "error",
-      500
+      "GET"
     );
     res.status(500).json({ error: e.message });
   }
@@ -108,38 +100,7 @@ exports.getAllGlobalIdentifiersHandler = async (req, res) => {
 
 exports.getProjectsForGlobalIdentifierHandler = async (req, res) => {
   try {
-    // if (!uuid.validate(req.params.gid)) {
-    //   await log(
-    //     req.user.user_id,
-    //     req.user.fullName,
-    //     null,
-    //     `Failed to Fetch Global Identifier with id (${req.params.gid})`,
-    //     "GET",
-    //     "error",
-    //     400
-    //   );
-    //   return res.status(400).json({ error: "Invalid Id!" });
-    // }
-
     const gid = req.params.gid;
-
-    // check if the global identifier exists in database
-    // const globalIdentifier = await findGlobalIdentifierById(gid);
-
-    // if (!globalIdentifier) {
-    //   await log(
-    //     req.user.user_id,
-    //     req.user.fullName,
-    //     null,
-    //     `Failed to get all projects for Global Identifier with id (${gid}) (doesn't exist)`,
-    //     "GET",
-    //     "error",
-    //     404
-    //   );
-    //   return res
-    //     .status(404)
-    //     .json({ error: "Global Identifier doesn't exist!" });
-    // }
 
     let filter = {};
     filter.gid = gid;
@@ -153,16 +114,23 @@ exports.getProjectsForGlobalIdentifierHandler = async (req, res) => {
 
     //            ****************Main server*****************
     if (req.query.mode === "main") {
-      let response = await UserLoginToMainServerHandler(
-        req.user.email,
-        req.user.password
-      );
-      if (response.error) {
-        return res.status(400).json({
-          error: "Cannot do this operation on the main server!",
-          reason: response.error,
-        });
-      }
+      // let response = await UserLoginToMainServerHandler(
+      //   req.user.email,
+      //   req.user.password
+      // );
+      // if (response.error) {
+      // await log(
+      //   req.user.user_id,
+      //   req.user.fullName,
+      //   null,
+      //   `Failed to fetch all projects for global identifiers ${gid} from main server`,
+      //   "POST"
+      // );
+      //   return res.status(400).json({
+      //     error: "Cannot do this operation on the main server!",
+      //     reason: response.error,
+      //   });
+      // }
 
       response = await fetch(
         `${process.env.EC2_URL}/api/globalIdentifiers/${gid}/projects?name=${req.query.name}`,
@@ -174,11 +142,25 @@ exports.getProjectsForGlobalIdentifierHandler = async (req, res) => {
       );
       const data = await response.json();
       if (data.error) {
+        await log(
+          req.user.user_id,
+          req.user.fullName,
+          null,
+          `Failed to fetch all projects for global identifier ${gid} from main server`,
+          "GET"
+        );
         return res.status(400).json({
           error: "Cannot do this operation on the main server!",
           reason: data.error,
         });
       }
+      await log(
+        req.user.user_id,
+        req.user.fullName,
+        null,
+        `Fetch all projects for global identifier ${gid} from main server`,
+        "GET"
+      );
       return res.json({ projects: data.projects });
     }
 
@@ -189,10 +171,8 @@ exports.getProjectsForGlobalIdentifierHandler = async (req, res) => {
       req.user.user_id,
       req.user.fullName,
       gid,
-      `Fetch all projects for Global Identifier (${gid})`,
-      "GET",
-      "success",
-      200
+      `Fetch all projects for Global Identifier (${gid}) from local server`,
+      "GET"
     );
 
     res.json({ projects });
@@ -202,9 +182,7 @@ exports.getProjectsForGlobalIdentifierHandler = async (req, res) => {
       req.user.fullName,
       req.params.gid,
       `Failed to Fetch all projects for Global Identifier (${req.params.gid})`,
-      "GET",
-      "error",
-      500
+      "GET"
     );
     res.status(500).json({ error: e.message });
   }

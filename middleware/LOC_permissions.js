@@ -14,10 +14,8 @@ exports.canUpdate = async (req, res, next) => {
         req.user.user_id,
         req.user.fullName,
         null,
-        `Failed to update LOC with id (${req.params.id}) (Invalid ID)`,
-        "PATCH",
-        "error",
-        400
+        `Failed to get LOC with id (${req.params.id})`,
+        "GET"
       );
       return res.status(400).json({ error: "Invalid Id!" });
     }
@@ -30,10 +28,8 @@ exports.canUpdate = async (req, res, next) => {
         req.user.user_id,
         req.user.fullName,
         null,
-        `Failed to update LOC with id (${id}) (doesn't exist)`,
-        "PATCH",
-        "error",
-        404
+        `Failed to get LOC with id (${req.params.id})`,
+        "GET"
       );
       return res.status(404).json({ error: "LOC doesn't exist!" });
     }
@@ -63,9 +59,8 @@ exports.canUpdate = async (req, res, next) => {
         req.user.user_id,
         req.user.fullName,
         null,
-        `Failed to update loc with id (${id})`,
-        "error",
-        400
+        `Failed to get LOC with id (${req.params.id})`,
+        "GET"
       );
       return res.status(400).json({ error: "Cannot update loc!" });
     }
@@ -73,6 +68,13 @@ exports.canUpdate = async (req, res, next) => {
 
     next();
   } catch (e) {
+    await log(
+      req.user.user_id,
+      req.user.fullName,
+      null,
+      `Failed to get LOC with id (${req.params.id})`,
+      "GET"
+    );
     return res.status(500).json({ error: e.message });
   }
 };

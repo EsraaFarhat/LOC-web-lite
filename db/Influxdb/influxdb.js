@@ -17,8 +17,6 @@ const influx = new InfluxDB({
           description: FieldType.STRING,
           state: FieldType.BOOLEAN, //* true => seen, false => unseen
           user_name: FieldType.STRING,
-          level: FieldType.STRING,
-          status_code: FieldType.INTEGER,
         },
         tags: ["user_id", "gid", "method"],
       },

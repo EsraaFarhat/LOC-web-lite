@@ -16,10 +16,8 @@ exports.canGetProjects = async (req, res, next) => {
         req.user.user_id,
         req.user.fullName,
         null,
-        `Failed to Fetch all projects for Global Identifier with id (${req.params.gid})`,
-        "GET",
-        "error",
-        400
+        `Failed to get Global Identifier with id (${req.params.gid})`,
+        "GET"
       );
       return res.status(400).json({ error: "Invalid Id!" });
     }
@@ -32,10 +30,8 @@ exports.canGetProjects = async (req, res, next) => {
         req.user.user_id,
         req.user.fullName,
         null,
-        `Failed to get all projects for Global Identifier with id (${gid}) (doesn't exist)`,
-        "GET",
-        "error",
-        404
+        `Failed to get Global Identifier with id (${gid}) (doesn't exist)`,
+        "GET"
       );
       return res
         .status(404)
@@ -72,9 +68,8 @@ exports.canGetProjects = async (req, res, next) => {
         req.user.user_id,
         req.user.fullName,
         null,
-        `Failed to get projects for Global Identifier with id (${gid})`,
-        "error",
-        400
+        `Failed to get Global Identifier with id (${gid})`,
+        "GET"
       );
       return res
         .status(400)
@@ -83,6 +78,13 @@ exports.canGetProjects = async (req, res, next) => {
 
     next();
   } catch (e) {
+    await log(
+      req.user.user_id,
+      req.user.fullName,
+      null,
+      `Failed to get Global Identifier with id (${req.params.gid})`,
+      "GET"
+    );
     return res.status(500).json({ error: e.message });
   }
 };

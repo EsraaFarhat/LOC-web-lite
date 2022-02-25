@@ -6,8 +6,6 @@ exports.log = async (
   gid,
   description,
   method,
-  level,
-  status_code,
   state = false
 ) => {
   try {
@@ -17,8 +15,6 @@ exports.log = async (
         fields: {
           user_name,
           description,
-          level,
-          status_code,
           state, //* true => seen, false => unseen
         },
         tags: {

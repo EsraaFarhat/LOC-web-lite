@@ -36,26 +36,13 @@ const { log } = require("./log.controller");
 
 exports.downloadLocationHandler = async (req, res) => {
   try {
-    // let response = await UserLoginToMainServerHandler(
-    //   req.user.email,
-    //   req.user.password
-    // );
-    // if (response.error) {
-    //   return res.status(400).json({
-    //     error: "Cannot do this operation on the main server!",
-    //     reason: response.error,
-    //   });
-    // }
-
     if (!uuid.validate(req.params.id)) {
       await log(
         req.user.user_id,
         req.user.fullName,
         null,
         `Failed to download Location with id (${req.params.id})`,
-        "GET",
-        "error",
-        400
+        "POST",
       );
       return res.status(400).json({ error: "Invalid Id!" });
     }
@@ -72,6 +59,13 @@ exports.downloadLocationHandler = async (req, res) => {
     );
     const data = await response.json();
     if (data.error) {
+      await log(
+        req.user.user_id,
+        req.user.fullName,
+        null,
+        `Failed to download Location with id (${req.params.id})`,
+        "POST",
+      );
       return res
         .status(500)
         .json({ message: "Error from the main server", error: data.error });
@@ -116,7 +110,6 @@ exports.downloadLocationHandler = async (req, res) => {
       }
     }
     let project = await findProjectById(data.project.id);
-    // data.project.sync = true;
     if (!project) {
       try {
         await createProject(data.project);
@@ -133,7 +126,6 @@ exports.downloadLocationHandler = async (req, res) => {
       }
     }
     let location = await findLocationById(data.location.id);
-    // data.location.sync = true;
     if (!location) {
       try {
         await createLocation(data.location);
@@ -277,8 +269,24 @@ exports.downloadLocationHandler = async (req, res) => {
       }
     });
 
-    if (errors.length !== 0)
+    if (errors.length !== 0){
+      await log(
+        req.user.user_id,
+        req.user.fullName,
+        null,
+        `Download Location with id (${req.params.id}) completed with errors`,
+        "POST",
+      );
       return res.json({ message: "Download completed with errors", errors });
+    }
+
+    await log(
+      req.user.user_id,
+      req.user.fullName,
+      null,
+      `Download Location with id (${req.params.id}) completed`,
+      "POST",
+    );
     res.json({ message: "Download completed.." });
   } catch (e) {
     await log(
@@ -287,10 +295,7 @@ exports.downloadLocationHandler = async (req, res) => {
       null,
       `Failed to download location for web lite`,
       "DELETE",
-      "error",
-      500
     );
-    console.log(e);
     res.status(500).json({ error: e.message });
   }
 };
@@ -378,26 +383,13 @@ exports.uploadLOCs = async (data) => {
 
 exports.uploadLocationHandler = async (req, res) => {
   try {
-    // let response = await UserLoginToMainServerHandler(
-    //   req.user.email,
-    //   req.user.password
-    // );
-    // if (response.error) {
-    //   return res.status(400).json({
-    //     error: "Cannot do this operation on the main server!",
-    //     reason: response.error,
-    //   });
-    // }
-
     if (!uuid.validate(req.params.id)) {
       await log(
         req.user.user_id,
         req.user.fullName,
         null,
         `Failed to upload Location with id (${req.params.id})`,
-        "GET",
-        "error",
-        400
+        "POST",
       );
       return res.status(400).json({ error: "Invalid Id!" });
     }
@@ -406,6 +398,13 @@ exports.uploadLocationHandler = async (req, res) => {
 
     const location = await findLocationById(id);
     if (!location) {
+      await log(
+        req.user.user_id,
+        req.user.fullName,
+        null,
+        `Failed to upload Location with id (${req.params.id})`,
+        "POST",
+      );
       return res.status(404).json({ error: "Location doesn't exist" });
     }
 
@@ -414,21 +413,33 @@ exports.uploadLocationHandler = async (req, res) => {
     const errors = await this.uploadLOCs(LOCs);
 
     if (errors[0].length) {
+      await log(
+        req.user.user_id,
+        req.user.fullName,
+        null,
+        `Upload Location with id (${req.params.id}) completed with errors`,
+        "POST",
+      );
       return res
         .status(400)
         .json({ message: "Upload completed with errors", error: errors[0] });
     }
 
+    await log(
+      req.user.user_id,
+      req.user.fullName,
+      null,
+      `Upload Location with id (${req.params.id}) completed`,
+      "POST",
+    );
     res.json({ message: "Upload completed successfully.." });
   } catch (e) {
     await log(
       req.user.user_id,
       req.user.fullName,
       null,
-      `Failed to download location for web lite`,
-      "DELETE",
-      "error",
-      500
+      `Failed to upload location for web lite`,
+      "POST",
     );
     res.status(500).json({ error: e.message });
   }
