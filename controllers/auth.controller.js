@@ -100,7 +100,7 @@ exports.UserLoginHandler = async (req, res) => {
         error: _.map(error.details, (detail) => _.pick(detail, ["message"])),
       });
     }
-    let { user, error } = await findUserByCredentials(
+    let { user, err } = await findUserByCredentials(
       req.body.email,
       req.body.password
     );
@@ -110,8 +110,8 @@ exports.UserLoginHandler = async (req, res) => {
         return res.status(400).json({ error: "Cannot login to the server!" });
       }
       token = await generateAuthToken(user);
-    } else if (error) {
-      const result = await this.LoginFromMain(req, error);
+    } else if (err) {
+      const result = await this.LoginFromMain(req, err);
       if (result.error) {
         await log(
           null,

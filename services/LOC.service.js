@@ -4,6 +4,7 @@ const { v4: uuidv4 } = require("uuid");
 const LOC = require("../models/LOC");
 const LOCDestination = require("../models/LOC_destination");
 const User = require("../models/user");
+const Location = require("../models/location");
 
 exports.findLOCById = async (id) => {
   try {
@@ -36,6 +37,9 @@ exports.getLOCWithUser = async (loc_id) => {
         {
           model: User,
         },
+        {
+          model: Location,
+        },
       ],
     });
     return loc;
@@ -51,6 +55,9 @@ exports.getLOC = async (loc_id) => {
       include: [
         {
           model: LOCDestination,
+        },
+        {
+          model: Location,
         },
       ],
     });
@@ -129,7 +136,7 @@ exports.validateLOC = (loc) => {
     field_3: Joi.string().trim().max(200).required(),
     MISC: Joi.string().trim().max(100).required(),
     LOC_type: Joi.string().trim().valid("single", "dual").required(),
-    cable_status: Joi.string().trim().valid("assigned", "unassigned"),
+    origin_status: Joi.string().trim().valid("assigned", "unassigned"),
     location_id: Joi.string().trim().required(),
   });
   return schema.validate(loc, { abortEarly: false });
@@ -143,7 +150,7 @@ exports.validateUpdateLOC = (loc) => {
     field_2: Joi.string().trim().max(200),
     field_3: Joi.string().trim().max(200),
     MISC: Joi.string().trim().max(100),
-    cable_status: Joi.string().trim().valid("assigned", "unassigned"),
+    origin_status: Joi.string().trim().valid("assigned", "unassigned"),
   });
   return schema.validate(loc, { abortEarly: false });
 };
@@ -157,6 +164,7 @@ exports.validateLOCDestination = (LOCDestination) => {
     longitude: Joi.number().required(),
     latitude: Joi.number().required(),
     radius: Joi.number().required(),
+    destination_status: Joi.string().trim().valid("assigned", "unassigned"),
   });
   return schema.validate(LOCDestination, { abortEarly: false });
 };
@@ -170,6 +178,7 @@ exports.validateUpdateLOCDestination = (LOCDestination) => {
     longitude: Joi.number(),
     latitude: Joi.number(),
     radius: Joi.number(),
+    destination_status: Joi.string().trim().valid("assigned", "unassigned"),
   });
   return schema.validate(LOCDestination, { abortEarly: false });
 };
@@ -181,6 +190,10 @@ exports.getLOCsByLocationId = async (location_id) => {
       include: [
         {
           model: LOCDestination,
+          // required: true,
+        },
+        {
+          model: Location,
           // required: true,
         },
       ],

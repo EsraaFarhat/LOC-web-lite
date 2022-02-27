@@ -30,7 +30,7 @@ exports.findUserByCredentials = async (email, password) => {
 
     return { user };
   } catch (e) {
-    return { error: e.message };
+    return { err: e.message };
   }
 };
 

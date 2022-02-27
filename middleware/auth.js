@@ -3,6 +3,7 @@ const hmacSHA512 = require("crypto-js/hmac-sha512");
 const Base64 = require("crypto-js/enc-base64");
 const User = require("../models/user");
 require("dotenv").config();
+const { log } = require("../controllers/log.controller");
 
 const auth = async (req, res, next) => {
   try {

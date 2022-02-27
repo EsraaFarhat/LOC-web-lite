@@ -34,7 +34,7 @@ LOC.init(
     MISC: {
       type: DataTypes.STRING(100),
     },
-    cable_status: {
+    origin_status: {
       type: DataTypes.ENUM,
       values: ["assigned", "unassigned"],
       defaultValue: "unassigned",

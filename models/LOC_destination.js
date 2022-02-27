@@ -42,6 +42,11 @@ LOCDestination.init(
     radius: {
       type: DataTypes.FLOAT(),
     },
+    destination_status: {
+      type: DataTypes.ENUM,
+      values: ["assigned", "unassigned"],
+      defaultValue: "unassigned",
+    },
     destination_sync: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,

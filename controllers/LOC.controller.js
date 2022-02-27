@@ -76,7 +76,7 @@ exports.createLOCHandler = async (req, res) => {
       field_3: req.body.field_3,
       MISC: req.body.MISC,
       LOC_type: req.body.LOC_type,
-      cable_status: req.body.cable_status,
+      origin_status: req.body.origin_status,
       location_id: req.body.location_id,
     };
     const destinationBody = {
@@ -87,6 +87,7 @@ exports.createLOCHandler = async (req, res) => {
       longitude: req.body.longitude,
       latitude: req.body.latitude,
       radius: req.body.radius,
+      destination_status: req.body.destination_status,
     };
     // validate the request
     const { error } = validateLOC(locBody);
@@ -297,7 +298,7 @@ exports.updateLOCHandler = async (req, res) => {
       field_2: req.body.field_2,
       field_3: req.body.field_3,
       MISC: req.body.MISC,
-      cable_status: req.body.cable_status,
+      origin_status: req.body.origin_status,
     };
     const destinationBody = {
       destination: req.body.destination,
@@ -307,6 +308,7 @@ exports.updateLOCHandler = async (req, res) => {
       longitude: req.body.longitude,
       latitude: req.body.latitude,
       radius: req.body.radius,
+      destination_status: req.body.destination_status,
     };
 
     // validate the request first
@@ -388,9 +390,15 @@ exports.updateLOCHandler = async (req, res) => {
       "PATCH"
     );
 
+    if (updatedLOC[1]) {
+      return res.json({
+        message: "LOC updated successfully..",
+        loc: updatedLOC[1][0].dataValues,
+      });
+    }
     res.json({
       message: "LOC updated successfully..",
-      loc: updatedLOC[1][0].dataValues,
+      loc: loc.dataValues,
     });
   } catch (e) {
     await log(

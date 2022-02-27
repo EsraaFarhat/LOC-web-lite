@@ -42,7 +42,7 @@ exports.downloadLocationHandler = async (req, res) => {
         req.user.fullName,
         null,
         `Failed to download Location with id (${req.params.id})`,
-        "POST",
+        "POST"
       );
       return res.status(400).json({ error: "Invalid Id!" });
     }
@@ -64,7 +64,7 @@ exports.downloadLocationHandler = async (req, res) => {
         req.user.fullName,
         null,
         `Failed to download Location with id (${req.params.id})`,
-        "POST",
+        "POST"
       );
       return res
         .status(500)
@@ -269,13 +269,13 @@ exports.downloadLocationHandler = async (req, res) => {
       }
     });
 
-    if (errors.length !== 0){
+    if (errors.length !== 0) {
       await log(
         req.user.user_id,
         req.user.fullName,
         null,
         `Download Location with id (${req.params.id}) completed with errors`,
-        "POST",
+        "POST"
       );
       return res.json({ message: "Download completed with errors", errors });
     }
@@ -285,7 +285,7 @@ exports.downloadLocationHandler = async (req, res) => {
       req.user.fullName,
       null,
       `Download Location with id (${req.params.id}) completed`,
-      "POST",
+      "POST"
     );
     res.json({ message: "Download completed.." });
   } catch (e) {
@@ -294,7 +294,7 @@ exports.downloadLocationHandler = async (req, res) => {
       req.user.fullName,
       null,
       `Failed to download location for web lite`,
-      "DELETE",
+      "DELETE"
     );
     res.status(500).json({ error: e.message });
   }
@@ -389,7 +389,7 @@ exports.uploadLocationHandler = async (req, res) => {
         req.user.fullName,
         null,
         `Failed to upload Location with id (${req.params.id})`,
-        "POST",
+        "POST"
       );
       return res.status(400).json({ error: "Invalid Id!" });
     }
@@ -403,7 +403,7 @@ exports.uploadLocationHandler = async (req, res) => {
         req.user.fullName,
         null,
         `Failed to upload Location with id (${req.params.id})`,
-        "POST",
+        "POST"
       );
       return res.status(404).json({ error: "Location doesn't exist" });
     }
@@ -418,7 +418,7 @@ exports.uploadLocationHandler = async (req, res) => {
         req.user.fullName,
         null,
         `Upload Location with id (${req.params.id}) completed with errors`,
-        "POST",
+        "POST"
       );
       return res
         .status(400)
@@ -430,7 +430,7 @@ exports.uploadLocationHandler = async (req, res) => {
       req.user.fullName,
       null,
       `Upload Location with id (${req.params.id}) completed`,
-      "POST",
+      "POST"
     );
     res.json({ message: "Upload completed successfully.." });
   } catch (e) {
@@ -439,7 +439,7 @@ exports.uploadLocationHandler = async (req, res) => {
       req.user.fullName,
       null,
       `Failed to upload location for web lite`,
-      "POST",
+      "POST"
     );
     res.status(500).json({ error: e.message });
   }
