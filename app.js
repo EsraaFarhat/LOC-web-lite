@@ -2,6 +2,8 @@ const cors = require("cors");
 const express = require("express");
 const http = require("http");
 const os = require("os-utils");
+const socketio = require("socket.io");
+const net = require("net");
 const checkDiskSpace = require("check-disk-space").default;
 require("dotenv").config();
 
@@ -22,22 +24,32 @@ require("./models/LOC");
 require("./models/LOC_destination");
 
 const app = express();
+const server = http.createServer(app);
+const io = socketio(server, {
+  cors: {
+    origin: "*"
+  }
+});
 
 let connected_users = {};
 let Max_Connections;
+let count = 0;
 
-const server = http.createServer(app);
 
-server.on("connection", function (socket) {
+io.on("connection", (socket) => {
   socket.setMaxListeners(100);
   Max_Connections = socket.getMaxListeners();
-  socket.__fd = socket.fd;
-  connected_users[socket.__fd] = socket.remoteAddress;
 
-  socket.on("close", function () {
-    delete connected_users[socket.__fd];
-    // console.log(connected_users);
-    //     console.log(Object.keys(connected_users).length)
+  console.log(Max_Connections);
+
+  console.log("New websocket connection");
+  count++;
+  console.log(count);
+
+  socket.on("disconnect", function () {
+    console.log("User left");
+    count--;
+    console.log(count);
   });
 });
 
@@ -51,10 +63,15 @@ app.use("/api/projects", projectRouter);
 app.use("/api/locations", LocationRouter);
 app.use("/api/LOCs", LOCRouter);
 
-app.get("/api/localServerMetrics", auth, async (req, res) => {
+app.get("/localServerMetrics", async (req, res) => {
   const diskSpace = await checkDiskSpace("/");
   const freeStorage = diskSpace.free / Math.pow(1000, 3);
   const totalStorage = diskSpace.size / Math.pow(1000, 3);
+
+  // server.getConnections(function (err, count) {
+  //   if (err) throw err;
+  //   console.log(count);
+  // });
 
   os.cpuUsage(function (v) {
     return res.json({
@@ -63,7 +80,7 @@ app.get("/api/localServerMetrics", auth, async (req, res) => {
       CPU_Usage: v * 100 + " %",
       Total_Memory: os.totalmem() + " MB",
       Free_Memory: os.freemem() + " MB",
-      Connections: 1,
+      Connections: count,
       Max_Connections,
     });
   });
