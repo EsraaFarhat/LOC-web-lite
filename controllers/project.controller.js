@@ -1,12 +1,11 @@
 const fetch = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args));
-const _ = require("lodash");
-const uuid = require("uuid");
-const { log } = require("./log.controller");
-
-const { findProjectById } = require("../services/project.service");
-const { getLocationsForProject } = require("../services/location.service");
-const { UserLoginToMainServerHandler } = require("../services/user.service");
+  const sequelize = require("../db/postgres/db");
+  const { log } = require("./log.controller");
+  const {
+    getLocationsForSuperUser,
+    getLocationsForUser,
+  } = require("../services/location.service");
 
 exports.getLocationsForProjectHandler = async (req, res) => {
   try {
@@ -24,17 +23,6 @@ exports.getLocationsForProjectHandler = async (req, res) => {
 
     //            ****************Main server*****************
     if (req.query.mode === "main") {
-      // let response = await UserLoginToMainServerHandler(
-      //   req.user.email,
-      //   req.user.password
-      // );
-      // if (response.error) {
-      //   return res.status(400).json({
-      //     error: "Cannot do this operation on the main server!",
-      //     reason: response.error,
-      //   });
-      // }
-
       response = await fetch(
         `${process.env.EC2_URL}/api/projects/${project_id}/locations?name=${req.query.name}`,
         {
@@ -68,24 +56,41 @@ exports.getLocationsForProjectHandler = async (req, res) => {
     }
 
     //            ****************Local server*****************
-    const locations = await getLocationsForProject(filter);
+    let project = req.projectToGet;
+    // const locations = await getLocationsForProject(filter);
+
+    let locations = [];
+    // if (req.user.role === "admin") {
+    //   locations = await getLocationsForAdmin(filter);
+    // } else 
+    if (req.user.role === "super user") {
+      locations = await getLocationsForSuperUser(filter, req.user);
+    } else if (req.user.role === "user") {
+      locations = await getLocationsForUser(filter, req.user);
+    }
 
     await log(
       req.user.user_id,
       req.user.fullName,
       project.gid,
       `Fetch All locations for project (${project_id}) on local server`,
-      "GET",
+      "GET"
     );
 
-    res.json({ locations });
+    globalIdentifier = _.pick(project, [
+      "GlobalIdentifier.gid",
+      "GlobalIdentifier.name",
+    ]).GlobalIdentifier;
+    project = _.pick(project, ["id", "name"]);
+
+    res.json({ locations, project, globalIdentifier });
   } catch (e) {
     await log(
       req.user.user_id,
       req.user.fullName,
       null,
       `Failed to get all locations for project with id (${req.body.id}) on local server`,
-      "GET",
+      "GET"
     );
     res.status(500).json({ error: e.message });
   }

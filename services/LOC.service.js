@@ -67,6 +67,47 @@ exports.getLOC = async (loc_id) => {
   }
 };
 
+exports.getLOCsForSuperUser = async (filter, loggedInUser) => {
+  try {
+    const locs = await LOC.findAll({
+      where: filter,
+      include: [
+        {
+          model: User,
+        },
+      ],
+    });
+    return locs.filter(
+      (loc) =>
+        loc.User.user_id === loggedInUser.user_id ||
+        loc.User.sup_id === loggedInUser.user_id
+    );
+  } catch (e) {
+    throw new Error(e.message);
+  }
+};
+
+exports.getLOCsForUser = async (filter, loggedInUser) => {
+  try {
+    const locs = await LOC.findAll({
+      where: filter,
+      include: [
+        {
+          model: User,
+        },
+      ],
+    });
+    return locs.filter(
+      (loc) =>
+        loc.User.user_id === loggedInUser.user_id ||
+        loc.User.sup_id === loggedInUser.sup_id ||
+        loc.User.user_id === loggedInUser.sup_id
+    );
+  } catch (e) {
+    throw new Error(e.message);
+  }
+};
+
 exports.createLOC = async (request, user_id) => {
   try {
     const newLOC = await LOC.create({

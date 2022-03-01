@@ -1,39 +1,25 @@
 const fetch = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args));
-const _ = require("lodash");
-const uuid = require("uuid");
-const { log } = require("./log.controller");
+  const { log } = require("./log.controller");
+  
+  const {
+    validateLOC,
+    validateLOCDestination,
+    createLOC,
+    createLOCDestination,
+    validateUpdateLOC,
+    validateUpdateLOCDestination,
+    updateLOC,
+    updateLOCDestination,
+    getLOCsForSuperUser,
+    getLOCsForUser,
+  } = require("../services/LOC.service");
 
-const {
-  findLOCByRouteId,
-  findLOCById,
-  validateLOC,
-  validateLOCDestination,
-  createLOC,
-  createLOCDestination,
-  validateUpdateLOC,
-  validateUpdateLOCDestination,
-  updateLOC,
-  updateLOCDestination,
-} = require("../services/LOC.service");
-const { findLocationById } = require("../services/location.service");
-const { UserLoginToMainServerHandler } = require("../services/user.service");
 
 exports.createLOCHandler = async (req, res) => {
   try {
     //            ****************Main server*****************
     if (req.query.mode === "main") {
-      // let response = await UserLoginToMainServerHandler(
-      //   req.user.email,
-      //   req.user.password
-      // );
-      // if (response.error) {
-      //   return res.status(400).json({
-      //     error: "Cannot do this operation on the main server!",
-      //     reason: response.error,
-      //   });
-      // }
-
       response = await fetch(`${process.env.EC2_URL}/api/LOCs`, {
         method: "post",
         body: JSON.stringify(req.body),
@@ -124,34 +110,36 @@ exports.createLOCHandler = async (req, res) => {
       }
     }
 
-    // check if the route_id exists in database
-    let loc = await findLOCByRouteId(req.body.route_id);
-    if (loc) {
-      await log(
-        req.user.user_id,
-        req.user.fullName,
-        null,
-        `Failed to create LOC on local server(route id already exists)`,
-        "POST"
+    // LOC route_id should be unique for every company
+    let loc = [];
+    // if (req.user.role === "admin") {
+    //   loc = await getLOCsForAdmin({
+    //     route_id: req.body.route_id,
+    //     location_id: req.body.location_id,
+    //   });
+    // } else
+    if (req.user.role === "super user") {
+      loc = await getLOCsForSuperUser(
+        { route_id: req.body.route_id, location_id: req.body.location_id },
+        req.user
       );
-      return res.status(400).json({ error: "This route id already exists!" });
+    } else if (req.user.role === "user") {
+      loc = await getLOCsForUser(
+        { route_id: req.body.route_id, location_id: req.body.location_id },
+        req.user
+      );
     }
 
-    // validate location_id [foreign key]
-    if (
-      !uuid.validate(req.body.location_id) ||
-      !(await findLocationById(req.body.location_id))
-    ) {
+    if (loc.length !== 0) {
       await log(
         req.user.user_id,
         req.user.fullName,
         null,
-        `Failed to create LOC on local server (Location doesn't exist)`,
+        `Failed to create LOC (route id already exists)`,
         "POST"
       );
-      return res
-        .status(404)
-        .json({ error: "Location with given id doesn't exist!" });
+
+      return res.status(400).json({ error: "This route id already exists!" });
     }
 
     // Create the LOC
@@ -216,17 +204,6 @@ exports.updateLOCHandler = async (req, res) => {
 
     //            ****************Main server*****************
     if (req.query.mode === "main") {
-      // let response = await UserLoginToMainServerHandler(
-      //   req.user.email,
-      //   req.user.password
-      // );
-      // if (response.error) {
-      //   return res.status(400).json({
-      //     error: "Cannot do this operation on the main server!",
-      //     reason: response.error,
-      //   });
-      // }
-
       response = await fetch(`${process.env.EC2_URL}/api/LOCs/${id}`, {
         method: "patch",
         body: JSON.stringify(req.body),
@@ -276,18 +253,61 @@ exports.updateLOCHandler = async (req, res) => {
 
     if (req.body.route_id) {
       // check if the route_id exists in database
-      let loc2 = await findLOCByRouteId(req.body.route_id);
-      if (loc2 && loc2.loc_id != id) {
+      let locByRouteID = [];
+      // if (req.user.role === "admin") {
+      //   locByRouteID = await getLOCsForAdmin({
+      //     route_id: req.body.route_id,
+      //     location_id: loc.location_id,
+      //   });
+      //   if (
+      //     locByRouteID.length !== 0 &&
+      //     locByRouteID[0].User.role === "admin"
+      //   ) {
+      //     locByRouteID = locByRouteID.filter(
+      //       (loc2) =>
+      //         loc2.User.role === "admin" && loc2.project_id === loc.location_id
+      //     );
+      //   } else if (
+      //     locByRouteID.length !== 0 &&
+      //     locByRouteID[0].User.role === "super user"
+      //   ) {
+      //     locByRouteID = await getLOCsForSuperUser(
+      //       { route_id: req.body.route_id, location_id: loc.location_id },
+      //       locByRouteID[0].User
+      //     );
+      //   } else if (
+      //     locByRouteID.length !== 0 &&
+      //     locByRouteID[0].User.role === "user"
+      //   ) {
+      //     ocByRouteID = await getLOCsForUser(
+      //       { route_id: req.body.route_id, location_id: loc.location_id },
+      //       locByRouteID[0].User
+      //     );
+      //   }
+      // } else 
+      if (req.user.role === "super user") {
+        locByRouteID = await getLOCsForSuperUser(
+          { route_id: req.body.route_id, location_id: loc.location_id },
+          req.user
+        );
+      } else if (req.user.role === "user") {
+        locByRouteID = await getLOCsForUser(
+          { route_id: req.body.route_id, location_id: loc.location_id },
+          req.user
+        );
+      }
+      if (locByRouteID.length !== 0 && locByRouteID[0].loc_id !== id) {
         await log(
           req.user.user_id,
           req.user.fullName,
           null,
-          `Failed to update LOC on local server (route id already exists)`,
-          "PATCH"
+          `Failed to update LOC (Name already exists)`,
+          "POST"
         );
+
         return res
           .status(400)
-          .json({ error: "This Route Id already exists, try another one!" });
+          .json({ error: "This name already exists, try another one!" });
       }
     }
 

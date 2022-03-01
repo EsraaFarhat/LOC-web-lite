@@ -10,9 +10,9 @@ const {
 } = require("../services/globalIdentifier.service");
 
 const {
-  getProjectsForGlobalIdentifier,
+  getProjectsForSuperUser,
+  getProjectsForUser,
 } = require("../services/project.service");
-const { UserLoginToMainServerHandler } = require("../services/user.service");
 
 exports.getAllGlobalIdentifiersHandler = async (req, res) => {
   try {
@@ -60,6 +60,7 @@ exports.getAllGlobalIdentifiersHandler = async (req, res) => {
     }
 
     //            ****************Local server*****************
+    let globalIdentifiers;
     if (req.user.role === "super user") {
       globalIdentifiers = await getGlobalIdentifiersForSuperUser(
         filter,
@@ -114,24 +115,6 @@ exports.getProjectsForGlobalIdentifierHandler = async (req, res) => {
 
     //            ****************Main server*****************
     if (req.query.mode === "main") {
-      // let response = await UserLoginToMainServerHandler(
-      //   req.user.email,
-      //   req.user.password
-      // );
-      // if (response.error) {
-      // await log(
-      //   req.user.user_id,
-      //   req.user.fullName,
-      //   null,
-      //   `Failed to fetch all projects for global identifiers ${gid} from main server`,
-      //   "POST"
-      // );
-      //   return res.status(400).json({
-      //     error: "Cannot do this operation on the main server!",
-      //     reason: response.error,
-      //   });
-      // }
-
       response = await fetch(
         `${process.env.EC2_URL}/api/globalIdentifiers/${gid}/projects?name=${req.query.name}`,
         {
@@ -165,7 +148,18 @@ exports.getProjectsForGlobalIdentifierHandler = async (req, res) => {
     }
 
     //            ****************Local server*****************
-    const projects = await getProjectsForGlobalIdentifier(filter);
+    const globalIdentifier = _.pick(req.GlobalIdentifierToGet, ["gid", "name"]);
+
+    // const projects = await getProjectsForGlobalIdentifier(filter);
+    let projects = [];
+    // if (req.user.role === "admin") {
+    //   projects = await getProjectsForAdmin(filter);
+    // } else
+    if (req.user.role === "super user") {
+      projects = await getProjectsForSuperUser(filter, req.user);
+    } else if (req.user.role === "user") {
+      projects = await getProjectsForUser(filter, req.user);
+    }
 
     await log(
       req.user.user_id,
@@ -175,7 +169,7 @@ exports.getProjectsForGlobalIdentifierHandler = async (req, res) => {
       "GET"
     );
 
-    res.json({ projects });
+    res.json({ projects, globalIdentifier });
   } catch (e) {
     await log(
       req.user.user_id,

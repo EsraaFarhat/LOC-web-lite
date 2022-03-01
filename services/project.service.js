@@ -55,3 +55,44 @@ exports.getProjectsForGlobalIdentifier = async (filter) => {
     throw new Error(e.message);
   }
 };
+
+exports.getProjectsForSuperUser = async (filter, loggedInUser) => {
+  try {
+    const projects = await Project.findAll({
+      where: filter,
+      include: [
+        {
+          model: User,
+        },
+      ],
+    });
+    return projects.filter(
+      (project) =>
+        project.User.user_id === loggedInUser.user_id ||
+        project.User.sup_id === loggedInUser.user_id
+    );
+  } catch (e) {
+    throw new Error(e.message);
+  }
+};
+
+exports.getProjectsForUser = async (filter, loggedInUser) => {
+  try {
+    const projects = await Project.findAll({
+      where: filter,
+      include: [
+        {
+          model: User,
+        },
+      ],
+    });
+    return projects.filter(
+      (project) =>
+        project.User.user_id === loggedInUser.user_id ||
+        project.User.sup_id === loggedInUser.sup_id ||
+        project.User.user_id === loggedInUser.sup_id
+    );
+  } catch (e) {
+    throw new Error(e.message);
+  }
+};

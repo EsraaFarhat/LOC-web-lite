@@ -319,7 +319,7 @@ exports.uploadLOCs = async (data) => {
 
           if (loc.error === "LOC doesn't exist!") {
             let response = await fetch(
-              `${process.env.EC2_URL}/api/LOCs/upload`,
+              `${process.env.EC2_URL}/api/LOCs/uploadFromLite`,
               {
                 method: "post",
                 body: JSON.stringify(local_loc.dataValues),
@@ -346,7 +346,7 @@ exports.uploadLOCs = async (data) => {
             };
           } else {
             let response = await fetch(
-              `${process.env.EC2_URL}/api/LOCs/${local_loc.loc_id}/upload`,
+              `${process.env.EC2_URL}/api/LOCs/${local_loc.loc_id}/uploadFromLite`,
               {
                 method: "patch",
                 body: JSON.stringify(local_loc.dataValues),

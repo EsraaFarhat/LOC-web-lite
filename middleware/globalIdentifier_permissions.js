@@ -59,10 +59,6 @@ exports.canGetProjects = async (req, res, next) => {
 
     if (
       !hasAccess
-      // req.user.role !== "admin" &&
-      // globalIdentifier.User.sup_id !== req.user.sup_id &&
-      // globalIdentifier.User.sup_id !== req.user.user_id &&
-      // globalIdentifier.User.user_id !== req.user.user_id
     ) {
       await log(
         req.user.user_id,
@@ -75,6 +71,8 @@ exports.canGetProjects = async (req, res, next) => {
         .status(400)
         .json({ error: "Cannot get projects for this global identifier!" });
     }
+
+    req.GlobalIdentifierToGet = globalIdentifier;
 
     next();
   } catch (e) {

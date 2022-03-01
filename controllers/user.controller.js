@@ -3,17 +3,6 @@ const { log } = require("./log.controller");
 
 exports.UpdateUsersDataHandler = async (req, res) => {
   try {
-    // let response = await UserLoginToMainServerHandler(
-    //   req.user.email,
-    //   req.user.password
-    // );
-    // if (response.error) {
-    //   return res.status(400).json({
-    //     error: "Cannot update users!",
-    //     reason: response.error,
-    //   });
-    // }
-
     const result = await updateUsersData(req.user.token);
     if (result.errors) {
       await log(

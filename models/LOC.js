@@ -12,7 +12,7 @@ LOC.init(
     },
     route_id: {
       type: DataTypes.STRING(100),
-      unique: true,
+      // unique: true,
     },
     origin_id: {
       type: DataTypes.UUID,

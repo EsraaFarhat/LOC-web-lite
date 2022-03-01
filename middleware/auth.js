@@ -10,6 +10,7 @@ const auth = async (req, res, next) => {
     const authToken = req.header("Authorization").replace("Bearer ", "");
     const loggedInUser = await User.findOne({ where: { token: authToken } });
 
+    if(!loggedInUser) throw new Error("Unable to authenticate!");
     const message = process.env.MESSAGE,
       nonce = loggedInUser.email,
       path = "PathTONoWhere",
@@ -19,7 +20,7 @@ const auth = async (req, res, next) => {
     hashDigest = sha256(hashDigest);
     const token = Base64.stringify(hmacSHA512(path + hashDigest, privateKey));
 
-    if (!loggedInUser || token !== authToken) {
+    if (token !== authToken) {
       throw new Error("Unable to authenticate!");
     }
 

@@ -1,6 +1,7 @@
 // const uuid = require("uuid");
 
 const Location = require("../models/location");
+const User = require("../models/user");
 // const User = require("../models/user");
 
 // const { findProjectById } = require("../services/project.service");
@@ -59,6 +60,47 @@ exports.getLocationsForProject = async (filter) => {
   try {
     const locations = await Location.findAll({ where: filter });
     return locations;
+  } catch (e) {
+    throw new Error(e.message);
+  }
+};
+
+exports.getLocationsForSuperUser = async (filter, loggedInUser) => {
+  try {
+    const locations = await Location.findAll({
+      where: filter,
+      include: [
+        {
+          model: User,
+        },
+      ],
+    });
+    return locations.filter(
+      (location) =>
+        location.User.user_id === loggedInUser.user_id ||
+        location.User.sup_id === loggedInUser.user_id
+    );
+  } catch (e) {
+    throw new Error(e.message);
+  }
+};
+
+exports.getLocationsForUser = async (filter, loggedInUser) => {
+  try {
+    const locations = await Location.findAll({
+      where: filter,
+      include: [
+        {
+          model: User,
+        },
+      ],
+    });
+    return locations.filter(
+      (location) =>
+        location.User.user_id === loggedInUser.user_id ||
+        location.User.sup_id === loggedInUser.sup_id ||
+        location.User.user_id === loggedInUser.sup_id
+    );
   } catch (e) {
     throw new Error(e.message);
   }

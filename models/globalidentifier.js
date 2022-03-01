@@ -12,7 +12,7 @@ GlobalIdentifier.init(
     },
     name: {
       type: DataTypes.STRING(50),
-      unique: true,
+      // unique: true,
     },
     // sync: {
     //   type: DataTypes.BOOLEAN,
