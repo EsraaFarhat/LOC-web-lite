@@ -43,34 +43,34 @@ exports.downloadLocationHandler = async (req, res) => {
         null,
         `Failed to download Location with id (${req.params.id})`,
         "POST"
-      );
-      return res.status(400).json({ error: "Invalid Id!" });
-    }
-
-    const id = req.params.id;
-
-    response = await fetch(
-      `${process.env.EC2_URL}/api/locations/${id}/download`,
+        );
+        return res.status(400).json({ error: "Invalid Id!" });
+      }
+      
+      const id = req.params.id;
+      
+      response = await fetch(
+        `${process.env.EC2_URL}/api/locations/${id}/download`,
       {
         headers: {
           Authorization: `Bearer ${req.user.token}`,
         },
       }
-    );
-    const data = await response.json();
-    if (data.error) {
-      await log(
+      );
+      const data = await response.json();
+      if (data.error) {
+        await log(
         req.user.user_id,
         req.user.fullName,
         null,
         `Failed to download Location with id (${req.params.id})`,
         "POST"
-      );
-      return res
+        );
+        return res
         .status(500)
         .json({ message: "Error from the main server", error: data.error });
-    }
-
+      }
+      
     let errors = [];
 
     let globalIdentifier = await findGlobalIdentifierById(
@@ -131,9 +131,10 @@ exports.downloadLocationHandler = async (req, res) => {
         await createLocation(data.location);
         console.log("location created");
       } catch (e) {
+        console.log(e)
         throw new Error(
           `Couldn't create location ${location.id}: ${e.message}`
-        );
+          );
       }
     } else {
       try {
@@ -300,23 +301,23 @@ exports.downloadLocationHandler = async (req, res) => {
   }
 };
 
-exports.uploadLOCs = async (data) => {
+exports.uploadLOCs = async (data, token) => {
   return new Promise((resolve, reject) => {
     let errors = [];
     const promises = data.map((local_loc, index) => {
       return new Promise(async (res, rej) => {
         let err;
         if (local_loc.sync === false) {
+          // !!!!!!!!!!!!!!permissions
           let loc = await fetch(
             `${process.env.EC2_URL}/api/LOCs/${local_loc.loc_id}`,
             {
               headers: {
-                Authorization: `Bearer ${req.user.token}`,
+                Authorization: `Bearer ${token}`,
               },
             }
           );
           loc = await loc.json();
-
           if (loc.error === "LOC doesn't exist!") {
             let response = await fetch(
               `${process.env.EC2_URL}/api/LOCs/uploadFromLite`,
@@ -324,12 +325,13 @@ exports.uploadLOCs = async (data) => {
                 method: "post",
                 body: JSON.stringify(local_loc.dataValues),
                 headers: {
-                  Authorization: `Bearer ${req.user.token}`,
+                  Authorization: `Bearer ${token}`,
                   "Content-Type": "application/json",
                 },
               }
             );
             response = await response.json();
+            console.log(response);
             if (response.error) {
               err = {
                 error: `Couldn't upload loc ${local_loc.loc_id}`,
@@ -351,7 +353,7 @@ exports.uploadLOCs = async (data) => {
                 method: "patch",
                 body: JSON.stringify(local_loc.dataValues),
                 headers: {
-                  Authorization: `Bearer ${req.user.token}`,
+                  Authorization: `Bearer ${token}`,
                   "Content-Type": "application/json",
                 },
               }
@@ -395,7 +397,7 @@ exports.uploadLocationHandler = async (req, res) => {
     }
 
     const id = req.params.id;
-
+    
     const location = await findLocationById(id);
     if (!location) {
       await log(
@@ -407,10 +409,10 @@ exports.uploadLocationHandler = async (req, res) => {
       );
       return res.status(404).json({ error: "Location doesn't exist" });
     }
+    
+    const LOCs = await getLOCsByLocationId(id, req.user);
 
-    const LOCs = await getLOCsByLocationId(id);
-
-    const errors = await this.uploadLOCs(LOCs);
+    const errors = await this.uploadLOCs(LOCs, req.user.token);
 
     if (errors[0].length) {
       await log(

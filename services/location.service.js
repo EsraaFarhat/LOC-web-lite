@@ -19,21 +19,21 @@ exports.findLocationById = async (id) => {
   }
 };
 
-// exports.getLocationWithUser = async (id) => {
-//   try {
-//     const location = await Location.findOne({
-//       where: { id },
-//       include: [
-//         {
-//           model: User,
-//         },
-//       ],
-//     });
-//     return location;
-//   } catch (e) {
-//     throw new Error(e.message);
-//   }
-// };
+exports.getLocationWithUser = async (id) => {
+  try {
+    const location = await Location.findOne({
+      where: { id },
+      include: [
+        {
+          model: User,
+        },
+      ],
+    });
+    return location;
+  } catch (e) {
+    throw new Error(e.message);
+  }
+};
 
 exports.createLocation = async (request) => {
   try {

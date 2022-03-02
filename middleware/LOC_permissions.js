@@ -2,6 +2,7 @@ const uuid = require("uuid");
 
 const { log } = require("../controllers/log.controller");
 const { getLOCWithUser } = require("../services/LOC.service");
+const { getLocationWithUser } = require("../services/location.service");
 
 exports.canGetLocationForCreateLOC = async (req, res, next) => {
   try {

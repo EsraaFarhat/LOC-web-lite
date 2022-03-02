@@ -224,7 +224,7 @@ exports.validateUpdateLOCDestination = (LOCDestination) => {
   return schema.validate(LOCDestination, { abortEarly: false });
 };
 
-exports.getLOCsByLocationId = async (location_id) => {
+exports.getLOCsByLocationId = async (location_id, loggedInUser) => {
   try {
     const LOCs = await LOC.findAll({
       where: { location_id },
@@ -237,8 +237,26 @@ exports.getLOCsByLocationId = async (location_id) => {
           model: Location,
           // required: true,
         },
+        {
+          model: User,
+          // required: true,
+        },
       ],
     });
+    if (loggedInUser.role === "super user") {
+      return LOCs.filter(
+        (loc) =>
+          loc.User.user_id === loggedInUser.user_id ||
+          loc.User.sup_id === loggedInUser.user_id
+      );
+    } else if (loggedInUser.role === "user") {
+      return LOCs.filter(
+        (loc) =>
+          loc.User.user_id === loggedInUser.user_id ||
+          loc.User.sup_id === loggedInUser.sup_id ||
+          loc.User.user_id === loggedInUser.sup_id
+      );
+    }
     return LOCs;
   } catch (e) {
     throw new Error(e.message);

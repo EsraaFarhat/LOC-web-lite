@@ -37,10 +37,10 @@ let count = 0;
 
 
 io.on("connection", (socket) => {
-  socket.setMaxListeners(100);
-  Max_Connections = socket.getMaxListeners();
+  // socket.setMaxListeners(100);
+  // Max_Connections = socket.getMaxListeners();
 
-  console.log(Max_Connections);
+  // console.log(Max_Connections);
 
   console.log("New websocket connection");
   count++;
@@ -68,11 +68,6 @@ app.get("/localServerMetrics", async (req, res) => {
   const freeStorage = diskSpace.free / Math.pow(1000, 3);
   const totalStorage = diskSpace.size / Math.pow(1000, 3);
 
-  // server.getConnections(function (err, count) {
-  //   if (err) throw err;
-  //   console.log(count);
-  // });
-
   os.cpuUsage(function (v) {
     return res.json({
       Total_Storage: totalStorage + " GB",
@@ -81,7 +76,7 @@ app.get("/localServerMetrics", async (req, res) => {
       Total_Memory: os.totalmem() + " MB",
       Free_Memory: os.freemem() + " MB",
       Connections: count,
-      Max_Connections,
+      Max_Connections: 5,
     });
   });
 });

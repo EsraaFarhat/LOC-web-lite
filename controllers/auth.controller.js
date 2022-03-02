@@ -34,10 +34,11 @@ exports.LoginFromMain = async (req, error) => {
         } else {
           user = response.user;
           if (user.role === "admin") {
-            resolve({
+            return resolve({
               error: "Cannot login to the server!",
             });
           }
+          console.log(user);
           const salt = await bcrypt.genSalt(10);
           const hashedPassword = await bcrypt.hash(req.body.password, salt);
           user.password = hashedPassword;

@@ -16,19 +16,19 @@ const {
 
 exports.getAllGlobalIdentifiersHandler = async (req, res) => {
   try {
-    let filter = {};
-    if (req.query.name) {
-      filter.name = sequelize.where(
-        sequelize.fn("LOWER", sequelize.col("name")),
-        "LIKE",
-        "%" + req.query.name.toLowerCase() + "%"
-      );
-    }
+    // let filter = {};
+    // if (req.query.name) {
+    //   filter.name = sequelize.where(
+    //     sequelize.fn("LOWER", sequelize.col("name")),
+    //     "LIKE",
+    //     "%" + req.query.name.toLowerCase() + "%"
+    //   );
+    // } else { filter.name = "" ;}
 
     //            ****************Main server*****************
     if (req.query.mode === "main") {
       response = await fetch(
-        `${process.env.EC2_URL}/api/globalIdentifiers?name=${req.query.name}`,
+        `${process.env.EC2_URL}/api/globalIdentifiers`,
         {
           headers: {
             Authorization: `Bearer ${req.user.token}`,
@@ -63,11 +63,11 @@ exports.getAllGlobalIdentifiersHandler = async (req, res) => {
     let globalIdentifiers;
     if (req.user.role === "super user") {
       globalIdentifiers = await getGlobalIdentifiersForSuperUser(
-        filter,
+        {},
         req.user
       );
     } else {
-      globalIdentifiers = await getGlobalIdentifiersForUser(filter, req.user);
+      globalIdentifiers = await getGlobalIdentifiersForUser({}, req.user);
     }
     globalIdentifiers = _.map(globalIdentifiers, (globalIdentifier) =>
       _.pick(globalIdentifier.dataValues, [
@@ -103,20 +103,20 @@ exports.getProjectsForGlobalIdentifierHandler = async (req, res) => {
   try {
     const gid = req.params.gid;
 
-    let filter = {};
-    filter.gid = gid;
-    if (req.query.name) {
-      filter.name = sequelize.where(
-        sequelize.fn("LOWER", sequelize.col("name")),
-        "LIKE",
-        "%" + req.query.name.toLowerCase() + "%"
-      );
-    }
+    // let filter = {};
+    // filter.gid = gid;
+    // if (req.query.name) {
+    //   filter.name = sequelize.where(
+    //     sequelize.fn("LOWER", sequelize.col("name")),
+    //     "LIKE",
+    //     "%" + req.query.name.toLowerCase() + "%"
+    //   );
+    // } else { filter.name = "" ;}
 
     //            ****************Main server*****************
     if (req.query.mode === "main") {
       response = await fetch(
-        `${process.env.EC2_URL}/api/globalIdentifiers/${gid}/projects?name=${req.query.name}`,
+        `${process.env.EC2_URL}/api/globalIdentifiers/${gid}/projects`,
         {
           headers: {
             Authorization: `Bearer ${req.user.token}`,
@@ -156,9 +156,9 @@ exports.getProjectsForGlobalIdentifierHandler = async (req, res) => {
     //   projects = await getProjectsForAdmin(filter);
     // } else
     if (req.user.role === "super user") {
-      projects = await getProjectsForSuperUser(filter, req.user);
+      projects = await getProjectsForSuperUser({}, req.user);
     } else if (req.user.role === "user") {
-      projects = await getProjectsForUser(filter, req.user);
+      projects = await getProjectsForUser({}, req.user);
     }
 
     await log(
