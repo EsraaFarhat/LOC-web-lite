@@ -52,6 +52,10 @@ User.init(
       // defaultValue: [],
       type: DataTypes.STRING,
     },
+    suspend: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
   },
   {
     sequelize,
