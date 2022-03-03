@@ -48,8 +48,8 @@ exports.canGetLocations = async (req, res, next) => {
     } else if (req.user.role === "user") {
       hasAccess =
         project.User.user_id === req.user.user_id ||
-        project.User.sup_id !== req.user.sup_id ||
-        project.User.user_id !== req.user.sup_id;
+        project.User.sup_id === req.user.sup_id ||
+        project.User.user_id === req.user.sup_id;
     }
 
     if (

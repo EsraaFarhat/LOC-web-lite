@@ -49,8 +49,8 @@ exports.canGetLocationForCreateLOC = async (req, res, next) => {
     } else if (req.user.role === "user") {
       hasAccess =
         location.User.user_id === req.user.user_id ||
-        location.User.sup_id !== req.user.sup_id ||
-        location.User.user_id !== req.user.sup_id;
+        location.User.sup_id === req.user.sup_id ||
+        location.User.user_id === req.user.sup_id;
     }
     if (!hasAccess) {
       await log(

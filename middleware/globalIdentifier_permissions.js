@@ -53,8 +53,8 @@ exports.canGetProjects = async (req, res, next) => {
     } else if (req.user.role === "user") {
       hasAccess =
         globalIdentifier.User.user_id === req.user.user_id ||
-        globalIdentifier.User.sup_id !== req.user.sup_id ||
-        globalIdentifier.User.user_id !== req.user.sup_id;
+        globalIdentifier.User.sup_id === req.user.sup_id ||
+        globalIdentifier.User.user_id === req.user.sup_id;
     }
 
     if (

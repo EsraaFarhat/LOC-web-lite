@@ -38,7 +38,7 @@ exports.LoginFromMain = async (req, error) => {
               error: "Cannot login to the server!",
             });
           }
-          console.log(user);
+          // console.log(user);
           const salt = await bcrypt.genSalt(10);
           const hashedPassword = await bcrypt.hash(req.body.password, salt);
           user.password = hashedPassword;
