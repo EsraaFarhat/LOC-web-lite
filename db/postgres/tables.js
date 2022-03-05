@@ -16,3 +16,5 @@ console.log("Tables created successfully...")
     console.log(error);
   }
 })();
+
+process.exit()
