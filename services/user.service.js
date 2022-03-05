@@ -25,8 +25,8 @@ exports.findUserByCredentials = async (email, password) => {
   try {
     const user = await this.findUser(email);
     if (!user) throw new Error("Invalid email or password!");
-
     const isMatch = await bcrypt.compare(password, user.password);
+    // console.log(isMatch);
     if (!isMatch) throw new Error("Invalid email or password!");
 
     return { user };

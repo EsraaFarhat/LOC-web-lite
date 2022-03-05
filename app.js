@@ -42,37 +42,6 @@ io.on("connection", (socket) => {
     console.log("Disconnected...");
     return;
   }
-  socket.on("connection", () => {
-    app.use(express.json());
-    app.use(cors());
-  
-    app.use("/api/auth", authRouter);
-    app.use("/api/users", userRouter);
-    app.use("/api/globalIdentifiers", globalIdentifierRouter);
-    app.use("/api/projects", projectRouter);
-    app.use("/api/locations", LocationRouter);
-    app.use("/api/LOCs", LOCRouter);
-
-    app.get("/localServerMetrics", async (req, res) => {
-      const diskSpace = await checkDiskSpace("/");
-      const freeStorage = diskSpace.free / Math.pow(1000, 3);
-      const totalStorage = diskSpace.size / Math.pow(1000, 3);
-  
-      os.cpuUsage(function (v) {
-        return res.json({
-          Total_Storage: totalStorage + " GB",
-          Free_Storage: freeStorage + " GB",
-          CPU_Usage: v * 100 + " %",
-          Total_Memory: os.totalmem() + " MB",
-          Free_Memory: os.freemem() + " MB",
-          Connections: count,
-          Max_Connections,
-        });
-      });
-    });
-  
-    app.use(error);
-  })
 
   console.log("New websocket connection");
   count++;
@@ -84,6 +53,36 @@ io.on("connection", (socket) => {
     console.log(count);
   });
 });
+
+app.use(express.json());
+app.use(cors());
+
+app.use("/api/auth", authRouter);
+app.use("/api/users", userRouter);
+app.use("/api/globalIdentifiers", globalIdentifierRouter);
+app.use("/api/projects", projectRouter);
+app.use("/api/locations", LocationRouter);
+app.use("/api/LOCs", LOCRouter);
+
+app.get("/localServerMetrics", async (req, res) => {
+  const diskSpace = await checkDiskSpace("/");
+  const freeStorage = diskSpace.free / Math.pow(1000, 3);
+  const totalStorage = diskSpace.size / Math.pow(1000, 3);
+
+  os.cpuUsage(function (v) {
+    return res.json({
+      Total_Storage: totalStorage + " GB",
+      Free_Storage: freeStorage + " GB",
+      CPU_Usage: v * 100 + " %",
+      Total_Memory: os.totalmem() + " MB",
+      Free_Memory: os.freemem() + " MB",
+      Connections: count,
+      Max_Connections,
+    });
+  });
+});
+
+app.use(error);
 
 process
   .on("unhandledRejection", (reason, p) => {

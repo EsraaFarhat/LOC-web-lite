@@ -20,14 +20,14 @@ exports.LoginFromMain = async (req, error) => {
   return new Promise((resolve, reject) => {
     require("dns").resolve("www.google.com", async function (err) {
       if (err) {
-        resolve({ error });
+        return resolve({ error });
       } else {
         let response = await UserLoginToMainServerHandler(
           req.body.email,
           req.body.password
         );
         if (response.error) {
-          resolve({
+          return resolve({
             error: response.error,
             reason: response.reason,
           });
@@ -69,8 +69,8 @@ exports.LoginFromMain = async (req, error) => {
               );
               response = await response.json();
               if (response.error) {
-                resolve({
-                  error: "Cannot create this user in database!",
+                return resolve({
+                  error: `Cannot create this user in database: ${response.error}`,
                 });
               }
               response.user.sup_id = null;
