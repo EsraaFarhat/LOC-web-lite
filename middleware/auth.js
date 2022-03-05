@@ -11,6 +11,8 @@ const auth = async (req, res, next) => {
     const loggedInUser = await User.findOne({ where: { token: authToken } });
 
     if(!loggedInUser) throw new Error("Unable to authenticate!");
+    if(loggedInUser.suspend) throw new Error("Unable to authenticate!");
+
     const message = process.env.MESSAGE,
       nonce = loggedInUser.email,
       path = "PathTONoWhere",

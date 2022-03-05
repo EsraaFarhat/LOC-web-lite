@@ -12,9 +12,9 @@ exports.canGetLocations = async (req, res, next) => {
     if (!uuid.validate(req.params.id)) {
       await log(
         req.user.user_id,
-        req.user.fullName,
+        req.user.email,
         null,
-        `Failed to get project with id (${req.params.id})`,
+        `Failed to get locations for project with id (${req.params.id})`,
         "GET"
       );
       return res.status(400).json({ error: "Invalid Id!" });
@@ -25,9 +25,9 @@ exports.canGetLocations = async (req, res, next) => {
     if (!project) {
       await log(
         req.user.user_id,
-        req.user.fullName,
+        req.user.email,
         null,
-        `Failed to get project with id (${req.params.id})`,
+        `Failed to get locations for project with id (${req.params.id})`,
         "GET"
       );
       return res.status(404).json({ error: "Project doesn't exist!" });
@@ -57,9 +57,9 @@ exports.canGetLocations = async (req, res, next) => {
     ) {
       await log(
         req.user.user_id,
-        req.user.fullName,
-        null,
-        `Failed to get project with id (${req.params.id})`,
+        req.user.email,
+        project.gid,
+        `Failed to get locations for project with id (${req.params.id})`,
         "GET"
       );
       return res
@@ -72,9 +72,9 @@ exports.canGetLocations = async (req, res, next) => {
   } catch (e) {
     await log(
       req.user.user_id,
-      req.user.fullName,
+      req.user.email,
       null,
-      `Failed to get project with id (${req.params.id})`,
+      `Failed to get locations for project with id (${req.params.id})`,
       "GET"
     );
     return res.status(500).json({ error: e.message });

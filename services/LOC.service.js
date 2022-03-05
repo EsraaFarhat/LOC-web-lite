@@ -73,8 +73,17 @@ exports.getLOCsForSuperUser = async (filter, loggedInUser) => {
       where: filter,
       include: [
         {
-          model: User,
+          model: LOCDestination,
+          // required: true,
         },
+        {
+          model: User,
+          // required: true,
+        },
+        {
+          model: Location,
+          // required: true,
+        }
       ],
     });
     return locs.filter(
@@ -93,8 +102,17 @@ exports.getLOCsForUser = async (filter, loggedInUser) => {
       where: filter,
       include: [
         {
-          model: User,
+          model: LOCDestination,
+          // required: true,
         },
+        {
+          model: User,
+          // required: true,
+        },
+        {
+          model: Location,
+          // required: true,
+        }
       ],
     });
     return locs.filter(
@@ -179,6 +197,7 @@ exports.validateLOC = (loc) => {
     LOC_type: Joi.string().trim().valid("single", "dual").required(),
     origin_status: Joi.string().trim().valid("assigned", "unassigned"),
     location_id: Joi.string().trim().required(),
+    gid: Joi.string().trim(),
   });
   return schema.validate(loc, { abortEarly: false });
 };
@@ -192,6 +211,7 @@ exports.validateUpdateLOC = (loc) => {
     field_3: Joi.string().trim().max(200),
     MISC: Joi.string().trim().max(100),
     origin_status: Joi.string().trim().valid("assigned", "unassigned"),
+    gid: Joi.string().trim(),
   });
   return schema.validate(loc, { abortEarly: false });
 };

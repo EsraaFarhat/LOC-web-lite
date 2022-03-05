@@ -9,8 +9,9 @@ const fetch = (...args) =>
   } = require("../services/location.service");
 
 exports.getLocationsForProjectHandler = async (req, res) => {
+  const project_id = req.params.id;
+  let project = req.projectToGet;
   try {
-    const project_id = req.params.id;
 
     // let filter = {};
     // filter.project_id = project_id;
@@ -36,7 +37,7 @@ exports.getLocationsForProjectHandler = async (req, res) => {
       if (data.error) {
         await log(
           req.user.user_id,
-          req.user.fullName,
+          req.user.email,
           null,
           `Failed to fetch all locations for project ${project_id} from main server`,
           "GET"
@@ -48,7 +49,7 @@ exports.getLocationsForProjectHandler = async (req, res) => {
       }
       await log(
         req.user.user_id,
-        req.user.fullName,
+        req.user.email,
         null,
         `Fetch all locations for project ${project_id} from main server`,
         "GET"
@@ -57,7 +58,6 @@ exports.getLocationsForProjectHandler = async (req, res) => {
     }
 
     //            ****************Local server*****************
-    let project = req.projectToGet;
     // const locations = await getLocationsForProject(filter);
 
     let locations = [];
@@ -72,7 +72,7 @@ exports.getLocationsForProjectHandler = async (req, res) => {
 
     await log(
       req.user.user_id,
-      req.user.fullName,
+      req.user.email,
       project.gid,
       `Fetch All locations for project (${project_id}) on local server`,
       "GET"
@@ -89,8 +89,8 @@ exports.getLocationsForProjectHandler = async (req, res) => {
   } catch (e) {
     await log(
       req.user.user_id,
-      req.user.fullName,
-      null,
+      req.user.email,
+      project.gid,
       `Failed to get all locations for project with id (${req.body.id}) on local server`,
       "GET"
     );

@@ -39,7 +39,7 @@ exports.downloadLocationHandler = async (req, res) => {
     if (!uuid.validate(req.params.id)) {
       await log(
         req.user.user_id,
-        req.user.fullName,
+        req.user.email,
         null,
         `Failed to download Location with id (${req.params.id})`,
         "POST"
@@ -61,7 +61,7 @@ exports.downloadLocationHandler = async (req, res) => {
       if (data.error) {
         await log(
         req.user.user_id,
-        req.user.fullName,
+        req.user.email,
         null,
         `Failed to download Location with id (${req.params.id})`,
         "POST"
@@ -273,7 +273,7 @@ exports.downloadLocationHandler = async (req, res) => {
     if (errors.length !== 0) {
       await log(
         req.user.user_id,
-        req.user.fullName,
+        req.user.email,
         null,
         `Download Location with id (${req.params.id}) completed with errors`,
         "POST"
@@ -283,7 +283,7 @@ exports.downloadLocationHandler = async (req, res) => {
 
     await log(
       req.user.user_id,
-      req.user.fullName,
+      req.user.email,
       null,
       `Download Location with id (${req.params.id}) completed`,
       "POST"
@@ -292,7 +292,7 @@ exports.downloadLocationHandler = async (req, res) => {
   } catch (e) {
     await log(
       req.user.user_id,
-      req.user.fullName,
+      req.user.email,
       null,
       `Failed to download location for web lite`,
       "DELETE"
@@ -388,7 +388,7 @@ exports.uploadLocationHandler = async (req, res) => {
     if (!uuid.validate(req.params.id)) {
       await log(
         req.user.user_id,
-        req.user.fullName,
+        req.user.email,
         null,
         `Failed to upload Location with id (${req.params.id})`,
         "POST"
@@ -402,7 +402,7 @@ exports.uploadLocationHandler = async (req, res) => {
     if (!location) {
       await log(
         req.user.user_id,
-        req.user.fullName,
+        req.user.email,
         null,
         `Failed to upload Location with id (${req.params.id})`,
         "POST"
@@ -417,7 +417,7 @@ exports.uploadLocationHandler = async (req, res) => {
     if (errors[0].length) {
       await log(
         req.user.user_id,
-        req.user.fullName,
+        req.user.email,
         null,
         `Upload Location with id (${req.params.id}) completed with errors`,
         "POST"
@@ -429,7 +429,7 @@ exports.uploadLocationHandler = async (req, res) => {
 
     await log(
       req.user.user_id,
-      req.user.fullName,
+      req.user.email,
       null,
       `Upload Location with id (${req.params.id}) completed`,
       "POST"
@@ -438,7 +438,7 @@ exports.uploadLocationHandler = async (req, res) => {
   } catch (e) {
     await log(
       req.user.user_id,
-      req.user.fullName,
+      req.user.email,
       null,
       `Failed to upload location for web lite`,
       "POST"

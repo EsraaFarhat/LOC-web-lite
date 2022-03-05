@@ -5,12 +5,13 @@ const { getLOCWithUser } = require("../services/LOC.service");
 const { getLocationWithUser } = require("../services/location.service");
 
 exports.canGetLocationForCreateLOC = async (req, res, next) => {
+  const gid = req.body ? req.body.gid : null;
   try {
     if (!uuid.validate(req.body.location_id)) {
       await log(
         req.user.user_id,
-        req.user.fullName,
-        null,
+        req.user.email,
+        gid,
         `Failed to create loc in this location`,
         "POST"
       );
@@ -24,8 +25,8 @@ exports.canGetLocationForCreateLOC = async (req, res, next) => {
     if (!location) {
       await log(
         req.user.user_id,
-        req.user.fullName,
-        null,
+        req.user.email,
+        gid,
         `Failed to create loc in this location`,
         "POST"
       );
@@ -55,8 +56,8 @@ exports.canGetLocationForCreateLOC = async (req, res, next) => {
     if (!hasAccess) {
       await log(
         req.user.user_id,
-        req.user.fullName,
-        null,
+        req.user.email,
+        gid,
         `Failed to create loc in this location`,
         "POST"
       );
@@ -69,8 +70,8 @@ exports.canGetLocationForCreateLOC = async (req, res, next) => {
   } catch (e) {
     await log(
       req.user.user_id,
-      req.user.fullName,
-      null,
+      req.user.email,
+      gid,
       `Failed to create loc in this location`,
       "POST"
     );
@@ -79,6 +80,7 @@ exports.canGetLocationForCreateLOC = async (req, res, next) => {
 };
 
 exports.canUpdate = async (req, res, next) => {
+  const gid = req.body ? req.body.gid : null;
   try {
     if (req.query.mode === "main") {
       return next();
@@ -87,10 +89,10 @@ exports.canUpdate = async (req, res, next) => {
     if (!uuid.validate(req.params.id)) {
       await log(
         req.user.user_id,
-        req.user.fullName,
-        null,
-        `Failed to get LOC with id (${req.params.id})`,
-        "GET"
+        req.user.email,
+        gid,
+        `Failed to update LOC with id (${req.params.id})`,
+        "PATCH"
       );
       return res.status(400).json({ error: "Invalid Id!" });
     }
@@ -101,10 +103,10 @@ exports.canUpdate = async (req, res, next) => {
     if (!loc) {
       await log(
         req.user.user_id,
-        req.user.fullName,
-        null,
-        `Failed to get LOC with id (${req.params.id})`,
-        "GET"
+        req.user.email,
+        gid,
+        `Failed to update LOC with id (${req.params.id})`,
+        "PATCH"
       );
       return res.status(404).json({ error: "LOC doesn't exist!" });
     }
@@ -132,10 +134,10 @@ exports.canUpdate = async (req, res, next) => {
     ) {
       await log(
         req.user.user_id,
-        req.user.fullName,
-        null,
-        `Failed to get LOC with id (${req.params.id})`,
-        "GET"
+        req.user.email,
+        gid,
+        `Failed to update LOC with id (${req.params.id})`,
+        "PATCH"
       );
       return res.status(400).json({ error: "Cannot update loc!" });
     }
@@ -145,10 +147,10 @@ exports.canUpdate = async (req, res, next) => {
   } catch (e) {
     await log(
       req.user.user_id,
-      req.user.fullName,
-      null,
-      `Failed to get LOC with id (${req.params.id})`,
-      "GET"
+      req.user.email,
+      gid,
+      `Failed to update LOC with id (${req.params.id})`,
+      "PATCH"
     );
     return res.status(500).json({ error: e.message });
   }

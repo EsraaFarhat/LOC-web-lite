@@ -131,7 +131,7 @@ exports.UserLoginHandler = async (req, res) => {
 
     await log(
       user.user_id,
-      user.fullName,
+      user.email,
       null,
       `User ${user.email} logged in`,
       "POST"
@@ -142,7 +142,7 @@ exports.UserLoginHandler = async (req, res) => {
       if (response.errors) {
         await log(
           user.user_id,
-          user.fullName,
+          user.email,
           null,
           `Failed to update all users for user ${user.user_id}`,
           "POST"
@@ -163,7 +163,7 @@ exports.UserLoginHandler = async (req, res) => {
       }
       await log(
         user.user_id,
-        user.fullName,
+        user.email,
         null,
         `Update all users for user ${user.user_id}`,
         "POST"
@@ -173,6 +173,49 @@ exports.UserLoginHandler = async (req, res) => {
         token,
         message: "Users updated successfully..",
       });
+    }
+
+    // !!!!!!!!!
+    if (user.role === "super user" && user.suspend) {
+      await log(
+        user.user_id,
+        user.email,
+        null,
+        `User ${user.email} failed to logged in (suspended)`,
+        "POST"
+      );
+      return res.status(403).json({
+        error: "You have been suspended, return to admin for more details...",
+      });
+    }
+    if (user.role === "user") {
+      if (user.suspend) {
+        await log(
+          user.user_id,
+          user.email,
+          null,
+          `User ${user.email} failed to logged in (suspended)`,
+          "POST"
+        );
+        return res.status(403).json({
+          error: "You have been suspended, return to admin for more details...",
+        });
+      } else {
+        const superuser = await findUserById(user.sup_id);
+        if (superuser.suspend) {
+          await log(
+            user.user_id,
+            user.email,
+            null,
+            `User ${user.email} failed to logged in (suspended)`,
+            "POST"
+          );
+          return res.status(403).json({
+            error:
+              "You have been suspended, return to admin for more details...",
+          });
+        }
+      }
     }
 
     res.json({

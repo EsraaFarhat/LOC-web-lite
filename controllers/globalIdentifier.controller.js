@@ -39,7 +39,7 @@ exports.getAllGlobalIdentifiersHandler = async (req, res) => {
       if (data.error) {
         await log(
           req.user.user_id,
-          req.user.fullName,
+          req.user.email,
           null,
           `Failed to fetch all global identifiers from main server`,
           "GET"
@@ -51,7 +51,7 @@ exports.getAllGlobalIdentifiersHandler = async (req, res) => {
       }
       await log(
         req.user.user_id,
-        req.user.fullName,
+        req.user.email,
         null,
         `Get all global identifiers from main server`,
         "GET"
@@ -80,7 +80,7 @@ exports.getAllGlobalIdentifiersHandler = async (req, res) => {
     );
     await log(
       req.user.user_id,
-      req.user.fullName,
+      req.user.email,
       null,
       `Fetch All Global Identifiers From local server`,
       "GET"
@@ -90,7 +90,7 @@ exports.getAllGlobalIdentifiersHandler = async (req, res) => {
   } catch (e) {
     await log(
       req.user.user_id,
-      req.user.fullName,
+      req.user.email,
       null,
       `Failed to Fetch All Global Identifiers`,
       "GET"
@@ -127,7 +127,7 @@ exports.getProjectsForGlobalIdentifierHandler = async (req, res) => {
       if (data.error) {
         await log(
           req.user.user_id,
-          req.user.fullName,
+          req.user.email,
           null,
           `Failed to fetch all projects for global identifier ${gid} from main server`,
           "GET"
@@ -139,7 +139,7 @@ exports.getProjectsForGlobalIdentifierHandler = async (req, res) => {
       }
       await log(
         req.user.user_id,
-        req.user.fullName,
+        req.user.email,
         null,
         `Fetch all projects for global identifier ${gid} from main server`,
         "GET"
@@ -163,7 +163,7 @@ exports.getProjectsForGlobalIdentifierHandler = async (req, res) => {
 
     await log(
       req.user.user_id,
-      req.user.fullName,
+      req.user.email,
       gid,
       `Fetch all projects for Global Identifier (${gid}) from local server`,
       "GET"
@@ -173,7 +173,7 @@ exports.getProjectsForGlobalIdentifierHandler = async (req, res) => {
   } catch (e) {
     await log(
       req.user.user_id,
-      req.user.fullName,
+      req.user.email,
       req.params.gid,
       `Failed to Fetch all projects for Global Identifier (${req.params.gid})`,
       "GET"
