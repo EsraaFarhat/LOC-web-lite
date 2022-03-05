@@ -22,63 +22,75 @@ exports.LoginFromMain = async (req, error) => {
       if (err) {
         return resolve({ error });
       } else {
-        let response = await UserLoginToMainServerHandler(
-          req.body.email,
-          req.body.password
-        );
-        if (response.error) {
-          return resolve({
-            error: response.error,
-            reason: response.reason,
-          });
-        } else {
-          user = response.user;
-          if (user.role === "admin") {
-            return resolve({
-              error: "Cannot login to the server!",
-            });
-          }
-          // console.log(user);
-          const salt = await bcrypt.genSalt(10);
-          const hashedPassword = await bcrypt.hash(req.body.password, salt);
-          user.password = hashedPassword;
-
-          const message = process.env.MESSAGE,
-            nonce = user.email,
-            path = "PathTONoWhere",
-            privateKey = process.env.PRIVATE_KEY;
-
-          let hashDigest = sha256(nonce + message);
-          hashDigest = sha256(hashDigest);
-          const token = Base64.stringify(
-            hmacSHA512(path + hashDigest, privateKey)
+        try {
+          let response = await UserLoginToMainServerHandler(
+            req.body.email,
+            req.body.password
           );
-
-          user.token = token;
-          if (user.role === "super user") user.sup_id = null;
-          if (user.role === "user") {
-            let superUser = await findUserById(user.sup_id);
-            if (!superUser) {
-              let response = await fetch(
-                `${process.env.EC2_URL}/api/users/${user.sup_id}`,
-                {
-                  headers: {
-                    Authorization: `Bearer ${token}`,
-                  },
-                }
-              );
-              response = await response.json();
-              if (response.error) {
-                return resolve({
-                  error: `Cannot create this user in database: ${response.error}`,
-                });
-              }
-              response.user.sup_id = null;
-              await createUser(response.user);
+          if (response.error) {
+            return resolve({
+              error: response.error,
+              reason: response.reason,
+            });
+          } else {
+            user = response.user;
+            if (user.role === "admin") {
+              return resolve({
+                error: "Cannot login to the server!",
+              });
             }
+            // console.log(user);
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash(req.body.password, salt);
+            user.password = hashedPassword;
+
+            const message = process.env.MESSAGE,
+              nonce = user.email,
+              path = "PathTONoWhere",
+              privateKey = process.env.PRIVATE_KEY;
+
+            let hashDigest = sha256(nonce + message);
+            hashDigest = sha256(hashDigest);
+            const token = Base64.stringify(
+              hmacSHA512(path + hashDigest, privateKey)
+            );
+
+            user.token = token;
+            if (user.role === "super user") user.sup_id = null;
+            // console.log(user);
+            if (user.role === "user") {
+              let superUser = await findUserById(user.sup_id);
+              if (!superUser) {
+                let response = await fetch(
+                  `${process.env.EC2_URL}/api/users/${user.sup_id}`,
+                  {
+                    headers: {
+                      Authorization: `Bearer ${token}`,
+                    },
+                  }
+                );
+                response = await response.json();
+                if (response.error) {
+                  return resolve({
+                    error: `Cannot create this user in database: ${response.error}`,
+                  });
+                }
+                response.user.sup_id = null;
+                await createUser(response.user);
+              }
+            }
+            await createUser(user);
+            resolve(user);
           }
-          await createUser(user);
-          resolve(user);
+        } catch (e) {
+          await log(
+            null,
+            null,
+            null,
+            `Failed to login user ${user.email}`,
+            "POST"
+          );
+          return res.status(400).json({ error: e.message });
         }
       }
     });

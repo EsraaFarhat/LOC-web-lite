@@ -59,7 +59,6 @@ exports.getLocationsForProjectHandler = async (req, res) => {
 
     //            ****************Local server*****************
     // const locations = await getLocationsForProject(filter);
-
     let locations = [];
     // if (req.user.role === "admin") {
     //   locations = await getLocationsForAdmin(filter);
@@ -78,13 +77,14 @@ exports.getLocationsForProjectHandler = async (req, res) => {
       "GET"
       );
 
-      
+      // console.log(project);
       globalIdentifier = _.pick(project, [
         "GlobalIdentifier.gid",
         "GlobalIdentifier.name",
       ]).GlobalIdentifier;
       project = _.pick(project, ["id", "name"]);
       
+      // console.log(locations, project, globalIdentifier);
     res.json({ locations, project, globalIdentifier });
   } catch (e) {
     await log(

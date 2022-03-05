@@ -1,23 +1,22 @@
 const fetch = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args));
-  const { log } = require("./log.controller");
-  
-  const {
-    validateLOC,
-    validateLOCDestination,
-    createLOC,
-    createLOCDestination,
-    validateUpdateLOC,
-    validateUpdateLOCDestination,
-    updateLOC,
-    updateLOCDestination,
-    getLOCsForSuperUser,
-    getLOCsForUser,
-  } = require("../services/LOC.service");
+const { log } = require("./log.controller");
 
+const {
+  validateLOC,
+  validateLOCDestination,
+  createLOC,
+  createLOCDestination,
+  validateUpdateLOC,
+  validateUpdateLOCDestination,
+  updateLOC,
+  updateLOCDestination,
+  getLOCsForSuperUser,
+  getLOCsForUser,
+} = require("../services/LOC.service");
 
 exports.createLOCHandler = async (req, res) => {
-  const gid = req.body ? req.body.gid : null;
+  const gid = req.body.gid ? req.body.gid : null;
   try {
     //            ****************Main server*****************
     if (req.query.mode === "main") {
@@ -53,8 +52,21 @@ exports.createLOCHandler = async (req, res) => {
       );
       return res.json({ message: data.message, loc: data.Loc });
     }
+  } catch (e) {
+    console.log(e);
+    await log(
+      req.user.user_id,
+      req.user.email,
+      gid,
+      `Failed to create LOC`,
+      "POST"
+    );
 
-    //            ****************Local server*****************
+    res.status(500).json({ error: e.message });
+  }
+
+  //            ****************Local server*****************
+  try {
     const locBody = {
       route_id: req.body.route_id,
       origin: req.body.origin,
@@ -90,6 +102,7 @@ exports.createLOCHandler = async (req, res) => {
         error: _.map(error.details, (detail) => _.pick(detail, ["message"])),
       });
     }
+
     // If the LOC is dual and has destination => validate the destination
     if (
       req.body.LOC_type === "dual" &&
@@ -200,7 +213,7 @@ exports.createLOCHandler = async (req, res) => {
 };
 
 exports.updateLOCHandler = async (req, res) => {
-  const gid = req.body ? req.body.gid : null;
+  const gid = req.body.gid ? req.body.gid : null;
   try {
     const id = req.params.id;
 
@@ -261,7 +274,7 @@ exports.updateLOCHandler = async (req, res) => {
       //     route_id: req.body.route_id,
       //     location_id: loc.location_id,
       //   });
-      // } else 
+      // } else
       if (req.user.role === "super user") {
         locByRouteID = await getLOCsForSuperUser(
           { route_id: req.body.route_id, location_id: loc.location_id },

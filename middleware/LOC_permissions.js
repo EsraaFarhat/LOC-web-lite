@@ -5,8 +5,12 @@ const { getLOCWithUser } = require("../services/LOC.service");
 const { getLocationWithUser } = require("../services/location.service");
 
 exports.canGetLocationForCreateLOC = async (req, res, next) => {
-  const gid = req.body ? req.body.gid : null;
+  if (req.query.mode === "main") {
+    return next();
+  }
+  const gid = req.body.gid ? req.body.gid : null;
   try {
+
     if (!uuid.validate(req.body.location_id)) {
       await log(
         req.user.user_id,
@@ -34,6 +38,7 @@ exports.canGetLocationForCreateLOC = async (req, res, next) => {
         .status(400)
         .json({ error: "Cannot create loc in this location!" });
     }
+
     /*
      ** If you are not an admin
      ** OR you are not the user created this location
@@ -80,7 +85,7 @@ exports.canGetLocationForCreateLOC = async (req, res, next) => {
 };
 
 exports.canUpdate = async (req, res, next) => {
-  const gid = req.body ? req.body.gid : null;
+  const gid = req.body.gid ? req.body.gid : null;
   try {
     if (req.query.mode === "main") {
       return next();

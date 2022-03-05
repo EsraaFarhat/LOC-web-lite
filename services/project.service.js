@@ -1,9 +1,21 @@
+const GlobalIdentifier = require("../models/globalidentifier");
 const Project = require("../models/project");
 const User = require("../models/user");
 
 exports.findProjectById = async (id) => {
   try {
     const project = await Project.findByPk(id);
+    return project;
+  } catch (e) {
+    throw new Error(e.message);
+  }
+};
+
+exports.findProject = async (filter) => {
+  try {
+    const project = await Project.findOne({
+      where: filter,
+    });
     return project;
   } catch (e) {
     throw new Error(e.message);
@@ -17,6 +29,9 @@ exports.getProjectWithUser = async (id) => {
       include: [
         {
           model: User,
+        },
+        {
+          model: GlobalIdentifier,
         },
       ],
     });
@@ -42,6 +57,14 @@ exports.updateProject = async (id, request) => {
       returning: true,
     });
     return project;
+  } catch (e) {
+    throw new Error(e.message);
+  }
+};
+
+exports.deleteProject = async (id) => {
+  try {
+    await Project.destroy({ where: { id } });
   } catch (e) {
     throw new Error(e.message);
   }

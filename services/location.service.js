@@ -19,6 +19,17 @@ exports.findLocationById = async (id) => {
   }
 };
 
+exports.findLocation = async (filter) => {
+  try {
+    const location = await Location.findOne({
+      where: filter,
+    });
+    return location;
+  } catch (e) {
+    throw new Error(e.message);
+  }
+};
+
 exports.getLocationWithUser = async (id) => {
   try {
     const location = await Location.findOne({
@@ -101,6 +112,14 @@ exports.getLocationsForUser = async (filter, loggedInUser) => {
         location.User.sup_id === loggedInUser.sup_id ||
         location.User.user_id === loggedInUser.sup_id
     );
+  } catch (e) {
+    throw new Error(e.message);
+  }
+};
+
+exports.deleteLocation = async (id) => {
+  try {
+    await Location.destroy({ where: { id } });
   } catch (e) {
     throw new Error(e.message);
   }

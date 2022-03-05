@@ -24,11 +24,15 @@ const {
   findLocationById,
   createLocation,
   updateLocation,
+  findLocation,
+  deleteLocation,
 } = require("../services/location.service");
 const {
   findProjectById,
   createProject,
   updateProject,
+  findProject,
+  deleteProject,
 } = require("../services/project.service");
 const { UserLoginToMainServerHandler } = require("../services/user.service");
 
@@ -43,34 +47,37 @@ exports.downloadLocationHandler = async (req, res) => {
         null,
         `Failed to download Location with id (${req.params.id})`,
         "POST"
-        );
-        return res.status(400).json({ error: "Invalid Id!" });
-      }
-      
-      const id = req.params.id;
-      
-      response = await fetch(
-        `${process.env.EC2_URL}/api/locations/${id}/download`,
+      );
+      return res.status(400).json({ error: "Invalid Id!" });
+    }
+
+    const id = req.params.id;
+
+    response = await fetch(
+      `${process.env.EC2_URL}/api/locations/${id}/download`,
       {
         headers: {
           Authorization: `Bearer ${req.user.token}`,
         },
       }
-      );
-      const data = await response.json();
-      if (data.error) {
-        await log(
+    );
+    
+    const data = await response.json();
+    console.log(data);
+
+    if (data.error) {
+      await log(
         req.user.user_id,
         req.user.email,
         null,
         `Failed to download Location with id (${req.params.id})`,
         "POST"
-        );
-        return res
+      );
+      return res
         .status(500)
         .json({ message: "Error from the main server", error: data.error });
-      }
-      
+    }
+
     let errors = [];
 
     let globalIdentifier = await findGlobalIdentifierById(
@@ -78,71 +85,75 @@ exports.downloadLocationHandler = async (req, res) => {
     );
     // data.globalIdentifier.sync = true;
     if (!globalIdentifier) {
-      try {
-        let globalIdentifier = await findGlobalIdentifier(
-          data.globalIdentifier.name
-        );
-        if (globalIdentifier)
-          await deleteGlobalIdentifier(globalIdentifier.gid);
-        await createGlobalIdentifier(data.globalIdentifier);
-        console.log("global identifier created");
-      } catch (e) {
-        throw new Error(
-          `Couldn't create global identifier ${globalIdentifier.gid}: ${e.message}`
-        );
-      }
+      // try {
+      let globalIdentifier = await findGlobalIdentifier(
+        data.globalIdentifier.name
+      );
+      if (globalIdentifier) await deleteGlobalIdentifier(globalIdentifier.gid);
+      await createGlobalIdentifier(data.globalIdentifier);
+      console.log("global identifier created");
+      // } catch (e) {
+      //   throw new Error(
+      //     `Couldn't create global identifier ${globalIdentifier.gid}: ${e.message}`
+      //   );
+      // }
     } else {
-      try {
-        let globalIdentifier2 = await findGlobalIdentifier(
-          data.globalIdentifier.name
-        );
-        if (globalIdentifier2 && globalIdentifier2.gid !== globalIdentifier.gid)
-          await deleteGlobalIdentifier(globalIdentifier2.gid);
-        await updateGlobalIdentifier(
-          globalIdentifier.gid,
-          data.globalIdentifier
-        );
-        console.log("global identifier updated");
-      } catch (e) {
-        errors.push(
-          `Couldn't update global identifier ${globalIdentifier.gid}: ${e.message}`
-        );
-      }
+      // try {
+      let globalIdentifier2 = await findGlobalIdentifier(
+        data.globalIdentifier.name
+      );
+      if (globalIdentifier2 && globalIdentifier2.gid !== globalIdentifier.gid)
+        await deleteGlobalIdentifier(globalIdentifier2.gid);
+      await updateGlobalIdentifier(globalIdentifier.gid, data.globalIdentifier);
+      console.log("global identifier updated");
+      // } catch (e) {
+      //   errors.push(
+      //     `Couldn't update global identifier ${globalIdentifier.gid}: ${e.message}`
+      //   );
+      // }
     }
     let project = await findProjectById(data.project.id);
     if (!project) {
-      try {
+      // try {
+        let project = await findProject({ name: data.project.name });
+        if (project) await deleteProject(project.id);
         await createProject(data.project);
         console.log("project created");
-      } catch (e) {
-        throw new Error(`Couldn't create project ${project.id}: ${e.message}`);
-      }
+      // } catch (e) {
+      //   throw new Error(`Couldn't create project ${project.id}: ${e.message}`);
+      // }
     } else {
-      try {
+      // try {
+        let project2 = await findProject({ name: data.project.name });
+        if (project2 && project2.id !== project.id) await deleteProject(project2.id);
         await updateProject(project.id, data.project);
         console.log("project updated");
-      } catch (e) {
-        errors.push(`Couldn't update project ${project.id}: ${e.message}`);
-      }
+      // } catch (e) {
+      //   errors.push(`Couldn't update project ${project.id}: ${e.message}`);
+      // }
     }
     let location = await findLocationById(data.location.id);
     if (!location) {
-      try {
+      // try {
+        let location = await findLocation({ name: data.location.name });
+        if (location) await deleteLocation(location.id);
         await createLocation(data.location);
         console.log("location created");
-      } catch (e) {
-        console.log(e)
-        throw new Error(
-          `Couldn't create location ${location.id}: ${e.message}`
-          );
-      }
+      // } catch (e) {
+      //   console.log(e);
+      //   throw new Error(
+      //     `Couldn't create location ${location.id}: ${e.message}`
+      //   );
+      // }
     } else {
-      try {
+      // try {
+        let location2 = await findLocation({ name: data.project.name });
+        if (location2 && location2.id !== location.id) await deleteLocation(location.id);
         await updateLocation(location.id, data.location);
         console.log("location updated");
-      } catch (e) {
-        errors.push(`Couldn't update location ${location.id}: ${e.message}`);
-      }
+      // } catch (e) {
+      //   errors.push(`Couldn't update location ${location.id}: ${e.message}`);
+      // }
     }
     data.singleLOCs.forEach(async (loc) => {
       let local_loc = await findLOCById(loc.loc_id);
@@ -331,7 +342,6 @@ exports.uploadLOCs = async (data, token) => {
               }
             );
             response = await response.json();
-            console.log(response);
             if (response.error) {
               err = {
                 error: `Couldn't upload loc ${local_loc.loc_id}`,
@@ -397,7 +407,7 @@ exports.uploadLocationHandler = async (req, res) => {
     }
 
     const id = req.params.id;
-    
+
     const location = await findLocationById(id);
     if (!location) {
       await log(
@@ -409,7 +419,7 @@ exports.uploadLocationHandler = async (req, res) => {
       );
       return res.status(404).json({ error: "Location doesn't exist" });
     }
-    
+
     const LOCs = await getLOCsByLocationId(id, req.user);
 
     const errors = await this.uploadLOCs(LOCs, req.user.token);
