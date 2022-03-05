@@ -14,6 +14,9 @@ const {
   createUser,
   findUserById,
   validateLogin,
+  findUser,
+  deleteUser,
+  updateUser,
 } = require("../services/user.service");
 
 exports.LoginFromMain = async (req, error) => {
@@ -79,7 +82,10 @@ exports.LoginFromMain = async (req, error) => {
                 await createUser(response.user);
               }
             }
-            await createUser(user);
+            // If the password change
+            let oldUser = await findUser(user.email);
+            if(oldUser) await updateUser(oldUser.id, user);
+            else await createUser(user);
             resolve(user);
           }
         } catch (e) {

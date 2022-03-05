@@ -1,6 +1,7 @@
 const uuid = require("uuid");
 const fetch = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args));
+  const _ = require("lodash");
 
 const {
   findGlobalIdentifierById,
@@ -38,6 +39,84 @@ const { UserLoginToMainServerHandler } = require("../services/user.service");
 
 const { log } = require("./log.controller");
 
+exports.getLocationHandler = async (req, res) => {
+  try {
+    if (req.query.mode === "main") {
+      
+      response = await fetch(
+        `${process.env.EC2_URL}/api/locations/${req.params.id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${req.user.token}`,
+          },
+        }
+        );
+        const data = await response.json();
+      if (data.error) {
+        await log(
+          req.user.user_id,
+          req.user.email,
+          null,
+          `Failed to fetch location with id ${req.params.id} from main server`,
+          "GET"
+        );
+        return res.status(400).json({
+          error: "Cannot do this operation on the main server!",
+          reason: data.error,
+        });
+      }
+      await log(
+        req.user.user_id,
+        req.user.email,
+        null,
+        `Get all global identifiers from main server`,
+        "GET"
+      );
+      return res.json({ location: data.location });
+    }
+
+        //            ****************Local server*****************
+    const id = req.params.id;
+    let location = req.locationToGet;
+    let project = await findProjectById(location.project_id);
+    let globalIdentifier = _.pick(project, [
+      "GlobalIdentifier.gid",
+      "GlobalIdentifier.name",
+    ]).GlobalIdentifier;
+    project = _.pick(project, ["id", "name"]);
+
+    location = _.pick(location, [
+      "id",
+      "name",
+      "longitude",
+      "latitude",
+      "radius",
+      "createdAt",
+      "updatedAt",
+      "project_id",
+      "User.user_id",
+    ]);
+    await log(
+      req.user.user_id,
+      req.user.email,
+      globalIdentifier.gid,
+      `Fetch location (${id})`,
+      "GET"
+    );
+
+    res.json({ location, project, globalIdentifier });
+  } catch (e) {
+    await log(
+      req.user.user_id,
+      req.user.email,
+      null,
+      `Failed to Fetch Location with id (${req.params.id})`,
+      "GET"
+    );
+    res.status(500).json({ error: e.message });
+  }
+};
+
 exports.downloadLocationHandler = async (req, res) => {
   try {
     if (!uuid.validate(req.params.id)) {
@@ -61,7 +140,7 @@ exports.downloadLocationHandler = async (req, res) => {
         },
       }
     );
-    
+
     const data = await response.json();
     console.log(data);
 
@@ -115,19 +194,20 @@ exports.downloadLocationHandler = async (req, res) => {
     let project = await findProjectById(data.project.id);
     if (!project) {
       // try {
-        let project = await findProject({ name: data.project.name });
-        if (project) await deleteProject(project.id);
-        await createProject(data.project);
-        console.log("project created");
+      let project = await findProject({ name: data.project.name });
+      if (project) await deleteProject(project.id);
+      await createProject(data.project);
+      console.log("project created");
       // } catch (e) {
       //   throw new Error(`Couldn't create project ${project.id}: ${e.message}`);
       // }
     } else {
       // try {
-        let project2 = await findProject({ name: data.project.name });
-        if (project2 && project2.id !== project.id) await deleteProject(project2.id);
-        await updateProject(project.id, data.project);
-        console.log("project updated");
+      let project2 = await findProject({ name: data.project.name });
+      if (project2 && project2.id !== project.id)
+        await deleteProject(project2.id);
+      await updateProject(project.id, data.project);
+      console.log("project updated");
       // } catch (e) {
       //   errors.push(`Couldn't update project ${project.id}: ${e.message}`);
       // }
@@ -135,10 +215,10 @@ exports.downloadLocationHandler = async (req, res) => {
     let location = await findLocationById(data.location.id);
     if (!location) {
       // try {
-        let location = await findLocation({ name: data.location.name });
-        if (location) await deleteLocation(location.id);
-        await createLocation(data.location);
-        console.log("location created");
+      let location = await findLocation({ name: data.location.name });
+      if (location) await deleteLocation(location.id);
+      await createLocation(data.location);
+      console.log("location created");
       // } catch (e) {
       //   console.log(e);
       //   throw new Error(
@@ -147,10 +227,11 @@ exports.downloadLocationHandler = async (req, res) => {
       // }
     } else {
       // try {
-        let location2 = await findLocation({ name: data.project.name });
-        if (location2 && location2.id !== location.id) await deleteLocation(location.id);
-        await updateLocation(location.id, data.location);
-        console.log("location updated");
+      let location2 = await findLocation({ name: data.project.name });
+      if (location2 && location2.id !== location.id)
+        await deleteLocation(location.id);
+      await updateLocation(location.id, data.location);
+      console.log("location updated");
       // } catch (e) {
       //   errors.push(`Couldn't update location ${location.id}: ${e.message}`);
       // }

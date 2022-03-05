@@ -4,7 +4,14 @@ const User = require("../models/user");
 
 exports.findProjectById = async (id) => {
   try {
-    const project = await Project.findByPk(id);
+    const project = await Project.findOne({
+      where: { id },
+      include: [
+        {
+          model: GlobalIdentifier,
+        },
+      ],
+    });
     return project;
   } catch (e) {
     throw new Error(e.message);
