@@ -18,6 +18,154 @@ const {
 const { findLocationById } = require("../services/location.service");
 const { findProjectById } = require("../services/project.service");
 
+exports.getLOCsHandler = async (req, res) => {
+  try {
+    const location_id = req.params.id;
+    const cable_status = req.params.cable_status;
+
+    let location = req.locationToGet;
+    let project = await findProjectById(location.project_id);
+    let globalIdentifier = _.pick(project, [
+      "GlobalIdentifier.gid",
+      "GlobalIdentifier.name",
+    ]).GlobalIdentifier;
+    project = _.pick(project, ["id", "name"]);
+    location = _.pick(location, ["id", "name"]);
+
+    if (cable_status !== "assigned" && cable_status !== "unassigned") {
+      await log(
+        req.user.user_id,
+        req.user.email,
+        globalIdentifier.gid,
+        `Failed to get LOCs for location (${location_id}) [invalid cable_status]`,
+        "GET"
+      );
+      return res
+        .status(400)
+        .json({ error: "Cable Status must be one of [assigned, unassigned]!" });
+    }
+
+    let filter = {};
+    filter.location_id = location_id;
+    if (req.query.route_id) {
+      filter.route_id = sequelize.where(
+        sequelize.fn("LOWER", sequelize.col("route_id")),
+        "LIKE",
+        "%" + req.query.route_id.toLowerCase() + "%"
+      );
+    }
+
+    let LOCs;
+    // if (req.user.role === "admin") {
+    //   LOCs = await getLOCs(filter);
+    // } else
+    if (req.user.role === "super user") {
+      LOCs = await getLOCsForSuperUser(filter, req.user);
+    } else if (req.user.role === "user") {
+      LOCs = await getLOCsForUser(filter, req.user);
+    }
+
+    let singleLOCs = LOCs.filter((loc) => {
+      loc.cable_status = cable_status;
+      return loc.LOC_type === "single" && loc.origin_status === cable_status;
+    });
+    let dualLOCs = LOCs.filter((loc) => {
+      loc.cable_status = cable_status;
+      if (loc.LOCDestination) {
+        let bool_cable_status = false,
+          origin_status = false,
+          destination_status = false;
+        if (cable_status === "assigned") bool_cable_status = true;
+        if (loc.origin_status === "assigned") origin_status = true;
+        if (loc.LOCDestination.destination_status === "assigned")
+          destination_status = true;
+
+        return (
+          loc.LOC_type === "dual" &&
+          (origin_status && destination_status) === bool_cable_status
+        );
+      }
+      return loc.LOC_type === "dual" && loc.cable_status === cable_status;
+    });
+
+    await log(
+      req.user.user_id,
+      req.user.email,
+      globalIdentifier.gid,
+      `Fetch All ${cable_status} LOCs for location (${location_id})`,
+      "GET"
+    );
+
+    res.json({
+      singleLOCs: _.map(singleLOCs, (loc) =>
+        _.pick(loc, [
+          "loc_id",
+          "route_id",
+          "origin_id",
+          "origin",
+          "field_1",
+          "field_2",
+          "field_3",
+          "MISC",
+          "origin_status",
+          "cable_status",
+          "LOC_type",
+          "createdAt",
+          "updatedAt",
+          "Location.longitude",
+          "Location.latitude",
+          "Location.radius",
+          "User.email",
+          "User.fullName",
+        ])
+      ),
+      dualLOCs: _.map(dualLOCs, (loc) =>
+        _.pick(loc, [
+          "loc_id",
+          "route_id",
+          "origin_id",
+          "origin",
+          "field_1",
+          "field_2",
+          "field_3",
+          "MISC",
+          "origin_status",
+          "cable_status",
+          "LOC_type",
+          "createdAt",
+          "updatedAt",
+          "Location.longitude",
+          "Location.latitude",
+          "Location.radius",
+          "LOCDestination.destination_id",
+          "LOCDestination.destination",
+          "LOCDestination.destination_field_1",
+          "LOCDestination.destination_field_2",
+          "LOCDestination.destination_field_3",
+          "LOCDestination.longitude",
+          "LOCDestination.latitude",
+          "LOCDestination.radius",
+          "LOCDestination.destination_status",
+          "User.email",
+          "User.fullName",
+        ])
+      ),
+      location,
+      project,
+      globalIdentifier,
+    });
+  } catch (e) {
+    await log(
+      req.user.user_id,
+      req.user.email,
+      null,
+      `Failed to get LOCs for location (${req.params.location_id})`,
+      "GET"
+    );
+    res.status(500).json({ error: e.message });
+  }
+};
+
 exports.getLOCHandler = async (req, res) => {
   try {
     //            ****************Main server*****************
