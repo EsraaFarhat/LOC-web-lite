@@ -96,7 +96,9 @@ exports.LoginFromMain = async (req, error) => {
             `Failed to login user ${user.email}`,
             "POST"
           );
-          return res.status(400).json({ error: e.message });
+          return resolve({
+            error: `Cannot create this user in database: ${e.message}`,
+          });
         }
       }
     });

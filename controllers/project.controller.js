@@ -1,18 +1,17 @@
 const fetch = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args));
-  const sequelize = require("../db/postgres/db");
-  const _ = require("lodash");
-  const { log } = require("./log.controller");
-  const {
-    getLocationsForSuperUser,
-    getLocationsForUser,
-  } = require("../services/location.service");
+const sequelize = require("../db/postgres/db");
+const _ = require("lodash");
+const { log } = require("./log.controller");
+const {
+  getLocationsForSuperUser,
+  getLocationsForUser,
+} = require("../services/location.service");
 
 exports.getLocationsForProjectHandler = async (req, res) => {
   const project_id = req.params.id;
   let project = req.projectToGet;
   try {
-
     // let filter = {};
     // filter.project_id = project_id;
     // if (req.query.name) {
@@ -54,7 +53,11 @@ exports.getLocationsForProjectHandler = async (req, res) => {
         `Fetch all locations for project ${project_id} from main server`,
         "GET"
       );
-      return res.json({ locations: data.locations });
+      return res.json({
+        locations: data.locations,
+        project: data.project,
+        globalIdentifier: data.globalIdentifier,
+      });
     }
 
     //            ****************Local server*****************
@@ -62,7 +65,7 @@ exports.getLocationsForProjectHandler = async (req, res) => {
     let locations = [];
     // if (req.user.role === "admin") {
     //   locations = await getLocationsForAdmin(filter);
-    // } else 
+    // } else
     if (req.user.role === "super user") {
       locations = await getLocationsForSuperUser({}, req.user);
     } else if (req.user.role === "user") {
@@ -75,16 +78,16 @@ exports.getLocationsForProjectHandler = async (req, res) => {
       project.gid,
       `Fetch All locations for project (${project_id}) on local server`,
       "GET"
-      );
+    );
 
-      // console.log(project);
-      globalIdentifier = _.pick(project, [
-        "GlobalIdentifier.gid",
-        "GlobalIdentifier.name",
-      ]).GlobalIdentifier;
-      project = _.pick(project, ["id", "name"]);
-      
-      // console.log(locations, project, globalIdentifier);
+    // console.log(project);
+    globalIdentifier = _.pick(project, [
+      "GlobalIdentifier.gid",
+      "GlobalIdentifier.name",
+    ]).GlobalIdentifier;
+    project = _.pick(project, ["id", "name"]);
+
+    // console.log(locations, project, globalIdentifier);
     res.json({ locations, project, globalIdentifier });
   } catch (e) {
     await log(

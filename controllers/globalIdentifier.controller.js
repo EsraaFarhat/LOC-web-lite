@@ -144,7 +144,7 @@ exports.getProjectsForGlobalIdentifierHandler = async (req, res) => {
         `Fetch all projects for global identifier ${gid} from main server`,
         "GET"
       );
-      return res.json({ projects: data.projects });
+      return res.json({ projects: data.projects, globalIdentifier: data.globalIdentifier });
     }
 
     //            ****************Local server*****************

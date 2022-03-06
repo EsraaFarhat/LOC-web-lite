@@ -432,6 +432,7 @@ exports.uploadLOCs = async (data, token) => {
                 error: `Couldn't upload loc ${local_loc.loc_id}`,
                 reason: response.error,
               };
+              await updateLOC(local_loc.loc_id, { sync: true });
             } else {
               await updateLOC(local_loc.loc_id, { sync: true });
               console.log("loc created");
@@ -459,6 +460,7 @@ exports.uploadLOCs = async (data, token) => {
                 error: `Couldn't upload loc ${local_loc.loc_id}`,
                 reason: response.error,
               };
+              await updateLOC(local_loc.loc_id, { sync: true });
             } else {
               console.log("loc updated");
               await updateLOC(local_loc.loc_id, { sync: true });
