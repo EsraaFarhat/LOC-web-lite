@@ -1,7 +1,7 @@
 const uuid = require("uuid");
 const fetch = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args));
-  const _ = require("lodash");
+const _ = require("lodash");
 
 const {
   findGlobalIdentifierById,
@@ -41,8 +41,8 @@ const { log } = require("./log.controller");
 
 exports.getLocationHandler = async (req, res) => {
   try {
+    //            ****************Main server*****************
     if (req.query.mode === "main") {
-      
       response = await fetch(
         `${process.env.EC2_URL}/api/locations/${req.params.id}`,
         {
@@ -50,8 +50,8 @@ exports.getLocationHandler = async (req, res) => {
             Authorization: `Bearer ${req.user.token}`,
           },
         }
-        );
-        const data = await response.json();
+      );
+      const data = await response.json();
       if (data.error) {
         await log(
           req.user.user_id,
@@ -69,13 +69,17 @@ exports.getLocationHandler = async (req, res) => {
         req.user.user_id,
         req.user.email,
         null,
-        `Get all global identifiers from main server`,
+        `Get location with id ${req.params.id} from main server`,
         "GET"
       );
-      return res.json({ location: data.location });
+      return res.json({
+        location: data.location,
+        project: data.project,
+        globalIdentifier: data.globalIdentifier,
+      });
     }
 
-        //            ****************Local server*****************
+    //            ****************Local server*****************
     const id = req.params.id;
     let location = req.locationToGet;
     let project = await findProjectById(location.project_id);

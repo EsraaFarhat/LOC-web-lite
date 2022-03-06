@@ -4,6 +4,82 @@ const { log } = require("../controllers/log.controller");
 const { getLOCWithUser } = require("../services/LOC.service");
 const { getLocationWithUser } = require("../services/location.service");
 
+
+exports.canGetLOC = async (req, res, next) => {
+  try {
+    if (!uuid.validate(req.params.id)) {
+      await log(
+        req.user.user_id,
+        req.user.email,
+        null,
+        `Failed to get LOC with id (${req.params.id})`,
+        "GET"
+      );
+      return res.status(400).json({ error: "Invalid Id!" });
+    }
+    const id = req.params.id;
+
+    const loc = await getLOCWithUser(id);
+
+    if (!loc) {
+      await log(
+        req.user.user_id,
+        req.user.email,
+        null,
+        `Failed to get LOC with id (${req.params.id})`,
+        "GET"
+      );
+      return res.status(404).json({ error: "LOC doesn't exist!" });
+    }
+    /*
+     ** If you are not an admin
+     ** OR you are not the user created this LOC
+     ** OR this LOC wasn't created by your super user or any user in your company
+     */
+    let hasAccess = false;
+    if (req.user.role === "admin") {
+      hasAccess = true;
+    }
+    if (req.user.role === "super user") {
+      hasAccess =
+        loc.User.user_id === req.user.user_id ||
+        loc.User.sup_id === req.user.user_id;
+    } else if (req.user.role === "user") {
+      hasAccess =
+        loc.User.user_id === req.user.user_id ||
+        loc.User.sup_id === req.user.sup_id ||
+        loc.User.user_id === req.user.sup_id;
+    }
+    if (
+      !hasAccess
+      // req.user.role !== "admin" &&
+      // loc.User.user_id !== req.user.user_id &&
+      // loc.User.sup_id !== req.user.sup_id &&
+      // loc.User.sup_id !== req.user.user_id
+    ) {
+      await log(
+        req.user.user_id,
+        req.user.email,
+        null,
+        `Failed to get LOC with id (${req.params.id})`,
+        "GET"
+      );
+      return res.status(404).json({ error: "LOC doesn't exist!" });
+    }
+    req.locToGet = loc;
+    next();
+  } catch (e) {
+    await log(
+      req.user.user_id,
+      req.user.email,
+      null,
+      `Failed to get LOC with id (${req.params.id})`,
+      "GET"
+    );
+    return res.status(500).json({ error: e.message });
+  }
+};
+
 exports.canGetLocationForCreateLOC = async (req, res, next) => {
   if (req.query.mode === "main") {
     return next();

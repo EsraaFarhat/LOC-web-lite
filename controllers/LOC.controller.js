@@ -1,6 +1,7 @@
 const fetch = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args));
 const { log } = require("./log.controller");
+const _ = require("lodash");
 
 const {
   validateLOC,
@@ -14,6 +15,115 @@ const {
   getLOCsForSuperUser,
   getLOCsForUser,
 } = require("../services/LOC.service");
+const { findLocationById } = require("../services/location.service");
+const { findProjectById } = require("../services/project.service");
+
+exports.getLOCHandler = async (req, res) => {
+  try {
+    //            ****************Main server*****************
+    if (req.query.mode === "main") {
+      response = await fetch(
+        `${process.env.EC2_URL}/api/LOCs/${req.params.id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${req.user.token}`,
+          },
+        }
+      );
+      const data = await response.json();
+      if (data.error) {
+        await log(
+          req.user.user_id,
+          req.user.email,
+          null,
+          `Failed to fetch LOC with id ${req.params.id} from main server`,
+          "GET"
+        );
+        return res.status(400).json({
+          error: "Cannot do this operation on the main server!",
+          reason: data.error,
+        });
+      }
+      await log(
+        req.user.user_id,
+        req.user.email,
+        null,
+        `Get LOC with id ${req.params.id} from main server`,
+        "GET"
+      );
+      return res.json({
+        loc: data.loc,
+        location: data.location,
+        project: data.project,
+        globalIdentifier: data.globalIdentifier,
+      });
+    }
+    //            ****************Local server*****************
+    const id = req.params.id;
+    let loc = req.locToGet;
+    let location = await findLocationById(loc.location_id);
+    let project = await findProjectById(location.project_id);
+    let globalIdentifier = _.pick(project, [
+      "GlobalIdentifier.gid",
+      "GlobalIdentifier.name",
+    ]).GlobalIdentifier;
+    project = _.pick(project, ["id", "name"]);
+    location = _.pick(location, ["id", "name"]);
+
+    loc = _.pick(loc, [
+      "loc_id",
+      "route_id",
+      "origin_id",
+      "origin",
+      "field_1",
+      "field_2",
+      "field_3",
+      "MISC",
+      "origin_status",
+      "cable_status",
+      "LOC_type",
+      "createdAt",
+      "updatedAt",
+      "Location.longitude",
+      "Location.latitude",
+      "Location.radius",
+      "LOCDestination",
+      "User.user_id",
+    ]);
+
+    if (loc.LOC_type === "dual" && loc.LOCDestination) {
+      let bool_cable_status = false,
+        origin_status = false,
+        destination_status = false;
+      if (loc.origin_status === "assigned") origin_status = true;
+      if (loc.LOCDestination.destination_status === "assigned")
+        destination_status = true;
+
+      bool_cable_status = origin_status && destination_status;
+      if (bool_cable_status) loc.cable_status = "assigned";
+      else loc.cable_status = "unassigned";
+    } else loc.cable_status = loc.origin_status;
+
+    await log(
+      req.user.user_id,
+      req.user.email,
+      globalIdentifier.gid,
+      `Fetch LOC (${id})`,
+      "GET"
+    );
+
+    res.json({ loc, location, project, globalIdentifier });
+  } catch (e) {
+    await log(
+      req.user.user_id,
+      req.user.email,
+      null,
+      `Failed to get LOC with id (${req.params.id})`,
+      "GET"
+    );
+    res.status(500).json({ error: e.message });
+  }
+};
 
 exports.createLOCHandler = async (req, res) => {
   const gid = req.body.gid ? req.body.gid : null;
