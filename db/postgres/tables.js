@@ -1,11 +1,11 @@
 const sequelize = require("./db");
 
-require("../models/user");
-require("../models/globalidentifier");
-require("../models/project");
-require("../models/location");
-require("../models/LOC");
-require("../models/LOC_destination");
+require("../../models/user");
+require("../../models/globalidentifier");
+require("../../models/project");
+require("../../models/location");
+require("../../models/LOC");
+require("../../models/LOC_destination");
 
 (async function createTables() {
   try {
