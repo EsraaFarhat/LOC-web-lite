@@ -2,6 +2,7 @@ const fetch = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args));
 const { log } = require("./log.controller");
 const _ = require("lodash");
+const sequelize = require("../db/postgres/db");
 
 const {
   validateLOC,
