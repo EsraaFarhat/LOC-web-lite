@@ -64,7 +64,7 @@ app.use("/api/projects", projectRouter);
 app.use("/api/locations", LocationRouter);
 app.use("/api/LOCs", LOCRouter);
 
-app.get("/localServerMetrics", async (req, res) => {
+app.get("/localServerMetrics", auth, async (req, res) => {
   const diskSpace = await checkDiskSpace("/");
   const freeStorage = diskSpace.free / Math.pow(1000, 3);
   const totalStorage = diskSpace.size / Math.pow(1000, 3);
