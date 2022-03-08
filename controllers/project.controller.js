@@ -67,9 +67,9 @@ exports.getLocationsForProjectHandler = async (req, res) => {
     //   locations = await getLocationsForAdmin(filter);
     // } else
     if (req.user.role === "super user") {
-      locations = await getLocationsForSuperUser({}, req.user);
+      locations = await getLocationsForSuperUser({project_id: project.id}, req.user);
     } else if (req.user.role === "user") {
-      locations = await getLocationsForUser({}, req.user);
+      locations = await getLocationsForUser({project_id: project.id}, req.user);
     }
 
     await log(

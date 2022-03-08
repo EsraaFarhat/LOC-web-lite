@@ -156,9 +156,9 @@ exports.getProjectsForGlobalIdentifierHandler = async (req, res) => {
     //   projects = await getProjectsForAdmin(filter);
     // } else
     if (req.user.role === "super user") {
-      projects = await getProjectsForSuperUser({}, req.user);
+      projects = await getProjectsForSuperUser({gid: globalIdentifier.gid}, req.user);
     } else if (req.user.role === "user") {
-      projects = await getProjectsForUser({}, req.user);
+      projects = await getProjectsForUser({gid: globalIdentifier.gid}, req.user);
     }
 
     await log(
