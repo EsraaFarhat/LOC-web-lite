@@ -67,8 +67,11 @@ exports.getLOC = async (loc_id) => {
   }
 };
 
-exports.getLOCsForSuperUser = async (filter, loggedInUser) => {
+exports.getLOCsForSuperUser = async (filter, loggedInUser, order) => {
   try {
+    if (order === "") order = "createdAt";
+    let type = order === "route_id" ? "ASC" : "DESC";
+
     const locs = await LOC.findAll({
       where: filter,
       include: [
@@ -83,8 +86,9 @@ exports.getLOCsForSuperUser = async (filter, loggedInUser) => {
         {
           model: Location,
           // required: true,
-        }
+        },
       ],
+      order: [[order, type]],
     });
     return locs.filter(
       (loc) =>
@@ -96,8 +100,11 @@ exports.getLOCsForSuperUser = async (filter, loggedInUser) => {
   }
 };
 
-exports.getLOCsForUser = async (filter, loggedInUser) => {
+exports.getLOCsForUser = async (filter, loggedInUser, order) => {
   try {
+    if (order === "") order = "createdAt";
+    let type = order === "route_id" ? "ASC" : "DESC";
+
     const locs = await LOC.findAll({
       where: filter,
       include: [
@@ -112,14 +119,14 @@ exports.getLOCsForUser = async (filter, loggedInUser) => {
         {
           model: Location,
           // required: true,
-        }
+        },
       ],
+      order: [[order, type]],
     });
     return locs.filter(
-      (loc) =>
-        loc.User.user_id === loggedInUser.user_id 
-        // || loc.User.sup_id === loggedInUser.sup_id ||
-        // loc.User.user_id === loggedInUser.sup_id
+      (loc) => loc.User.user_id === loggedInUser.user_id
+      // || loc.User.sup_id === loggedInUser.sup_id ||
+      // loc.User.user_id === loggedInUser.sup_id
     );
   } catch (e) {
     throw new Error(e.message);
@@ -244,8 +251,11 @@ exports.validateUpdateLOCDestination = (LOCDestination) => {
   return schema.validate(LOCDestination, { abortEarly: false });
 };
 
-exports.getLOCsByLocationId = async (location_id, loggedInUser) => {
+exports.getLOCsByLocationId = async (location_id, loggedInUser, order) => {
   try {
+    if (order === "") order = "createdAt";
+    let type = order === "route_id" ? "ASC" : "DESC";
+
     const LOCs = await LOC.findAll({
       where: { location_id },
       include: [
@@ -262,6 +272,7 @@ exports.getLOCsByLocationId = async (location_id, loggedInUser) => {
           // required: true,
         },
       ],
+      order: [[order, type]],
     });
     if (loggedInUser.role === "super user") {
       return LOCs.filter(
@@ -271,10 +282,9 @@ exports.getLOCsByLocationId = async (location_id, loggedInUser) => {
       );
     } else if (loggedInUser.role === "user") {
       return LOCs.filter(
-        (loc) =>
-          loc.User.user_id === loggedInUser.user_id 
-          // || loc.User.sup_id === loggedInUser.sup_id ||
-          // loc.User.user_id === loggedInUser.sup_id
+        (loc) => loc.User.user_id === loggedInUser.user_id
+        // || loc.User.sup_id === loggedInUser.sup_id ||
+        // loc.User.user_id === loggedInUser.sup_id
       );
     }
     return LOCs;

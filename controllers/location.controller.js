@@ -507,7 +507,8 @@ exports.uploadLocationHandler = async (req, res) => {
       return res.status(404).json({ error: "Location doesn't exist" });
     }
 
-    const LOCs = await getLOCsByLocationId(id, req.user);
+    let order = "";
+    const LOCs = await getLOCsByLocationId(id, req.user, order);
 
     const errors = await this.uploadLOCs(LOCs, req.user.token);
 

@@ -56,14 +56,19 @@ exports.getLOCsHandler = async (req, res) => {
       );
     }
 
+    let order = '';
+    if(req.query.order_by === "route_id" || req.query.order_by === "createdAt"){
+      order = req.query.order_by;
+    }
+
     let LOCs;
     // if (req.user.role === "admin") {
     //   LOCs = await getLOCs(filter);
     // } else
     if (req.user.role === "super user") {
-      LOCs = await getLOCsForSuperUser(filter, req.user);
+      LOCs = await getLOCsForSuperUser(filter, req.user, order);
     } else if (req.user.role === "user") {
-      LOCs = await getLOCsForUser(filter, req.user);
+      LOCs = await getLOCsForUser(filter, req.user, order);
     }
 
     let singleLOCs = LOCs.filter((loc) => {
@@ -394,12 +399,14 @@ exports.createLOCHandler = async (req, res) => {
     if (req.user.role === "super user") {
       loc = await getLOCsForSuperUser(
         { route_id: req.body.route_id, location_id: req.body.location_id },
-        req.user
+        req.user,
+        order
       );
     } else if (req.user.role === "user") {
       loc = await getLOCsForUser(
         { route_id: req.body.route_id, location_id: req.body.location_id },
-        req.user
+        req.user,
+        order
       );
     }
 
@@ -537,12 +544,14 @@ exports.updateLOCHandler = async (req, res) => {
       if (req.user.role === "super user") {
         locByRouteID = await getLOCsForSuperUser(
           { route_id: req.body.route_id, location_id: loc.location_id },
-          req.user
+          req.user,
+          order
         );
       } else if (req.user.role === "user") {
         locByRouteID = await getLOCsForUser(
           { route_id: req.body.route_id, location_id: loc.location_id },
-          req.user
+          req.user,
+          order
         );
       }
       if (locByRouteID.length !== 0 && locByRouteID[0].loc_id !== id) {
