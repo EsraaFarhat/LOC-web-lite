@@ -108,9 +108,9 @@ exports.getLocationsForUser = async (filter, loggedInUser) => {
     });
     return locations.filter(
       (location) =>
-        location.User.user_id === loggedInUser.user_id ||
-        location.User.sup_id === loggedInUser.sup_id ||
-        location.User.user_id === loggedInUser.sup_id
+        location.User.user_id === loggedInUser.user_id 
+        // || location.User.sup_id === loggedInUser.sup_id ||
+        // location.User.user_id === loggedInUser.sup_id
     );
   } catch (e) {
     throw new Error(e.message);

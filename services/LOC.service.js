@@ -117,9 +117,9 @@ exports.getLOCsForUser = async (filter, loggedInUser) => {
     });
     return locs.filter(
       (loc) =>
-        loc.User.user_id === loggedInUser.user_id ||
-        loc.User.sup_id === loggedInUser.sup_id ||
-        loc.User.user_id === loggedInUser.sup_id
+        loc.User.user_id === loggedInUser.user_id 
+        // || loc.User.sup_id === loggedInUser.sup_id ||
+        // loc.User.user_id === loggedInUser.sup_id
     );
   } catch (e) {
     throw new Error(e.message);
@@ -272,9 +272,9 @@ exports.getLOCsByLocationId = async (location_id, loggedInUser) => {
     } else if (loggedInUser.role === "user") {
       return LOCs.filter(
         (loc) =>
-          loc.User.user_id === loggedInUser.user_id ||
-          loc.User.sup_id === loggedInUser.sup_id ||
-          loc.User.user_id === loggedInUser.sup_id
+          loc.User.user_id === loggedInUser.user_id 
+          // || loc.User.sup_id === loggedInUser.sup_id ||
+          // loc.User.user_id === loggedInUser.sup_id
       );
     }
     return LOCs;

@@ -56,9 +56,9 @@ exports.getGlobalIdentifiersForUser = async (filter, loggedInUser) => {
     });
     return globalIdentifiers.filter(
       (gid) =>
-        gid.User.user_id === loggedInUser.user_id ||
-        gid.User.sup_id === loggedInUser.sup_id ||
-        gid.User.user_id === loggedInUser.sup_id
+        gid.User.user_id === loggedInUser.user_id 
+        // || gid.User.sup_id === loggedInUser.sup_id ||
+        // gid.User.user_id === loggedInUser.sup_id
     );
   } catch (e) {
     throw new Error(e.message);

@@ -4,7 +4,6 @@ const { log } = require("../controllers/log.controller");
 const { getLOCWithUser } = require("../services/LOC.service");
 const { getLocationWithUser } = require("../services/location.service");
 
-
 exports.canGetLOC = async (req, res, next) => {
   try {
     if (!uuid.validate(req.params.id)) {
@@ -45,18 +44,11 @@ exports.canGetLOC = async (req, res, next) => {
         loc.User.user_id === req.user.user_id ||
         loc.User.sup_id === req.user.user_id;
     } else if (req.user.role === "user") {
-      hasAccess =
-        loc.User.user_id === req.user.user_id ||
-        loc.User.sup_id === req.user.sup_id ||
-        loc.User.user_id === req.user.sup_id;
+      hasAccess = loc.User.user_id === req.user.user_id;
+      // || loc.User.sup_id === req.user.sup_id ||
+      // loc.User.user_id === req.user.sup_id;
     }
-    if (
-      !hasAccess
-      // req.user.role !== "admin" &&
-      // loc.User.user_id !== req.user.user_id &&
-      // loc.User.sup_id !== req.user.sup_id &&
-      // loc.User.sup_id !== req.user.user_id
-    ) {
+    if (!hasAccess) {
       await log(
         req.user.user_id,
         req.user.email,
@@ -86,7 +78,6 @@ exports.canGetLocationForCreateLOC = async (req, res, next) => {
   }
   const gid = req.body.gid ? req.body.gid : null;
   try {
-
     if (!uuid.validate(req.body.location_id)) {
       await log(
         req.user.user_id,
@@ -129,10 +120,9 @@ exports.canGetLocationForCreateLOC = async (req, res, next) => {
         location.User.user_id === req.user.user_id ||
         location.User.sup_id === req.user.user_id;
     } else if (req.user.role === "user") {
-      hasAccess =
-        location.User.user_id === req.user.user_id ||
-        location.User.sup_id === req.user.sup_id ||
-        location.User.user_id === req.user.sup_id;
+      hasAccess = location.User.user_id === req.user.user_id;
+      // || location.User.sup_id === req.user.sup_id ||
+      // location.User.user_id === req.user.sup_id;
     }
     if (!hasAccess) {
       await log(
@@ -207,12 +197,7 @@ exports.canUpdate = async (req, res, next) => {
     } else if (req.user.role === "user") {
       hasAccess = loc.User.user_id === req.user.user_id;
     }
-    if (
-      !hasAccess
-      // req.user.role !== "admin" &&
-      // loc.User.sup_id !== req.user.user_id &&
-      // loc.User.user_id !== req.user.user_id
-    ) {
+    if (!hasAccess) {
       await log(
         req.user.user_id,
         req.user.email,

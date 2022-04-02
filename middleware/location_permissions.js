@@ -42,18 +42,11 @@ exports.canGetLocation = async (req, res, next) => {
         location.User.user_id === req.user.user_id ||
         location.User.sup_id === req.user.user_id;
     } else if (req.user.role === "user") {
-      hasAccess =
-        location.User.user_id === req.user.user_id ||
-        location.User.sup_id === req.user.sup_id ||
-        location.User.user_id === req.user.sup_id;
+      hasAccess = location.User.user_id === req.user.user_id;
+      // || location.User.sup_id === req.user.sup_id ||
+      // location.User.user_id === req.user.sup_id;
     }
-    if (
-      !hasAccess
-      // req.user.role !== "admin" &&
-      // location.User.user_id !== req.user.user_id &&
-      // location.User.sup_id !== req.user.sup_id &&
-      // location.User.sup_id !== req.user.user_id
-    ) {
+    if (!hasAccess) {
       await log(
         req.user.user_id,
         req.user.email,

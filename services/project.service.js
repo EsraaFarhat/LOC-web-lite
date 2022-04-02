@@ -118,9 +118,9 @@ exports.getProjectsForUser = async (filter, loggedInUser) => {
     });
     return projects.filter(
       (project) =>
-        project.User.user_id === loggedInUser.user_id ||
-        project.User.sup_id === loggedInUser.sup_id ||
-        project.User.user_id === loggedInUser.sup_id
+        project.User.user_id === loggedInUser.user_id 
+        // || project.User.sup_id === loggedInUser.sup_id ||
+        // project.User.user_id === loggedInUser.sup_id
     );
   } catch (e) {
     throw new Error(e.message);

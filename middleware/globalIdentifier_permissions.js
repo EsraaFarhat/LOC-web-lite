@@ -52,14 +52,12 @@ exports.canGetProjects = async (req, res, next) => {
         globalIdentifier.User.sup_id === req.user.user_id;
     } else if (req.user.role === "user") {
       hasAccess =
-        globalIdentifier.User.user_id === req.user.user_id ||
-        globalIdentifier.User.sup_id === req.user.sup_id ||
-        globalIdentifier.User.user_id === req.user.sup_id;
+        globalIdentifier.User.user_id === req.user.user_id 
+        // || globalIdentifier.User.sup_id === req.user.sup_id ||
+        // globalIdentifier.User.user_id === req.user.sup_id;
     }
 
-    if (
-      !hasAccess
-    ) {
+    if (!hasAccess) {
       await log(
         req.user.user_id,
         req.user.email,

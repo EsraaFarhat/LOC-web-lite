@@ -404,7 +404,6 @@ exports.uploadLOCs = async (data, token) => {
       return new Promise(async (res, rej) => {
         let err;
         if (local_loc.sync === false) {
-          // !!!!!!!!!!!!!!permissions
           let loc = await fetch(
             `${process.env.EC2_URL}/api/LOCs/${local_loc.loc_id}`,
             {
@@ -415,6 +414,7 @@ exports.uploadLOCs = async (data, token) => {
           );
           loc = await loc.json();
           if (loc.error === "LOC doesn't exist!") {
+            // local_loc.dataValues
             let response = await fetch(
               `${process.env.EC2_URL}/api/LOCs/uploadFromLite`,
               {

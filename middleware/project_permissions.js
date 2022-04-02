@@ -46,15 +46,12 @@ exports.canGetLocations = async (req, res, next) => {
         project.User.user_id === req.user.user_id ||
         project.User.sup_id === req.user.user_id;
     } else if (req.user.role === "user") {
-      hasAccess =
-        project.User.user_id === req.user.user_id ||
-        project.User.sup_id === req.user.sup_id ||
-        project.User.user_id === req.user.sup_id;
+      hasAccess = project.User.user_id === req.user.user_id;
+      // || project.User.sup_id === req.user.sup_id ||
+      // project.User.user_id === req.user.sup_id;
     }
 
-    if (
-      !hasAccess
-    ) {
+    if (!hasAccess) {
       await log(
         req.user.user_id,
         req.user.email,
