@@ -1,7 +1,12 @@
+const uuid = require("uuid");
+const _ = require("lodash");
+const xlsx = require("xlsx");
+// const FormData = require('form-data');
+// const fs = require('fs');
+
 const fetch = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args));
 const { log } = require("./log.controller");
-const _ = require("lodash");
 const sequelize = require("../db/postgres/db");
 
 const {
@@ -16,8 +21,17 @@ const {
   getLOCsForSuperUser,
   getLOCsForUser,
 } = require("../services/LOC.service");
-const { findLocationById } = require("../services/location.service");
-const { findProjectById } = require("../services/project.service");
+const {
+  findLocationById,
+  getLocationWithUser,
+} = require("../services/location.service");
+const {
+  findProjectById,
+  getProjectWithUser,
+} = require("../services/project.service");
+const {
+  getGlobalIdentifierWithUser,
+} = require("../services/globalIdentifier.service");
 
 exports.getLOCsHandler = async (req, res) => {
   try {
@@ -56,8 +70,11 @@ exports.getLOCsHandler = async (req, res) => {
       );
     }
 
-    let order = '';
-    if(req.query.order_by === "route_id" || req.query.order_by === "createdAt"){
+    let order = "";
+    if (
+      req.query.order_by === "route_id" ||
+      req.query.order_by === "createdAt"
+    ) {
       order = req.query.order_by;
     }
 
@@ -685,6 +702,297 @@ exports.updateLOCHandler = async (req, res) => {
       gid,
       `Failed to update LOC`,
       "PATCH"
+    );
+    res.status(500).json({ error: e.message });
+  }
+};
+
+exports.validateLOCs = async (data, loggedInUser, location_id) => {
+  return new Promise((resolve, reject) => {
+    let errors = [];
+    const promises = data.map((locData, index) => {
+      return new Promise(async (res, rej) => {
+        let locError = [];
+        const locBody = {
+          route_id: locData.route_id,
+          origin: locData.origin,
+          field_1: locData.field_1,
+          field_2: locData.field_2,
+          field_3: locData.field_3,
+          MISC: locData.MISC,
+          LOC_type: locData.LOC_type,
+          origin_status: locData.origin_status,
+          location_id: location_id,
+        };
+        // validate the request
+        const { error } = validateLOC(locBody);
+        if (error) {
+          locError.push(
+            JSON.stringify(
+              _.map(
+                error.details,
+                (detail) => _.pick(detail, ["message"]).message
+              )
+            )
+          );
+        }
+
+        const destinationBody = {
+          destination: locData.destination,
+          destination_field_1: locData.destination_field_1,
+          destination_field_2: locData.destination_field_2,
+          destination_field_3: locData.destination_field_3,
+          longitude: locData.longitude,
+          latitude: locData.latitude,
+          radius: locData.radius,
+          destination_status: locData.destination_status,
+        };
+
+        if (
+          locData.LOC_type === "dual" &&
+          Object.values(destinationBody).filter((value) => value !== undefined)
+            .length
+        ) {
+          const { error } = validateLOCDestination(destinationBody);
+          if (error) {
+            locError.push(
+              JSON.stringify(
+                _.map(
+                  error.details,
+                  (detail) => _.pick(detail, ["message"]).message
+                )
+              )
+            );
+          }
+        }
+
+        let loc = [];
+        let order = "";
+        // if (loggedInUser.role === "admin") {
+        //   loc = await getLOCsForAdmin(
+        //     {
+        //       route_id: locBody.route_id,
+        //       location_id,
+        //     },
+        //     order
+        //   );
+        // } else
+        if (loggedInUser.role === "super user") {
+          loc = await getLOCsForSuperUser(
+            { route_id: locBody.route_id, location_id },
+            loggedInUser,
+            order
+          );
+        } else if (loggedInUser.role === "user") {
+          loc = await getLOCsForUser(
+            { route_id: locBody.route_id, location_id },
+            loggedInUser,
+            order
+          );
+        }
+
+        if (loc.length !== 0) {
+          locError.push("This route id already exists!");
+        }
+
+        if (locError.length) {
+          let obj = {};
+          obj[`row${index + 2}`] = locError;
+          errors.push(obj);
+        }
+        res(errors);
+      });
+    });
+    Promise.all(promises).then((outs) => {
+      return resolve(outs);
+    });
+  });
+};
+
+exports.uploadFileHandler = async (req, res) => {
+  //            ****************Main server*****************
+  // if (req.query.mode === "main") {
+  //   // convert req.file.buffer to Uint8Array
+  //   const ab = new ArrayBuffer(req.file.buffer.length);
+  //   const view = new Uint8Array(ab);
+  //   for (let i = 0; i < req.file.buffer.length; ++i) {
+  //     view[i] = req.file.buffer[i];
+  //   }
+  //   const formData = new FormData();
+  //   formData.append("LocFile", fs.createWriteStream(view));
+  //   response = await fetch(
+  //     `${process.env.EC2_URL}/api/LOCs/upload/${req.params.id}`,
+  //     {
+  //       method: "post",
+  //       body: formData,
+  //       headers: {
+  //         Authorization: `Bearer ${req.user.token}`
+  //       },
+  //     }
+  //   );
+  //   const data = await response.json();
+  //   if (data.error) {
+  //     await log(
+  //       req.user.user_id,
+  //       req.user.email,
+  //       null,
+  //       `Failed to upload file to main server`,
+  //       "POST"
+  //     );
+  //     return res.status(400).json({
+  //       error: "Cannot do this operation on the main server!",
+  //       reason: data.error,
+  //     });
+  //   }
+  //   await log(
+  //     req.user.user_id,
+  //     req.user.email,
+  //     null,
+  //     `Upload file to main server`,
+  //     "POST"
+  //   );
+  //   return res.json({
+  //     message: data.message,
+  //   });
+  // }
+
+  //            ****************Local server*****************
+
+  if (!req.file) {
+    await log(
+      req.user.user_id,
+      req.user.email,
+      null,
+      "Failed to Insert LOCs from file to database",
+      "POST"
+    );
+    return res.status(400).json({ error: "Please upload one file" });
+  }
+
+  const location_id = req.params.id;
+
+  // validate location_id [foreign key]
+  if (!uuid.validate(location_id)) {
+    await log(
+      req.user.user_id,
+      req.user.email,
+      null,
+      "Failed to Insert LOCs from file to database",
+      "POST"
+    );
+    return res
+      .status(400)
+      .json({ error: "Location with given id doesn't exist!" });
+  }
+  const location = await getLocationWithUser(location_id);
+  const project = await getProjectWithUser(location.project_id);
+  const globalIdentifier = await getGlobalIdentifierWithUser(project.gid);
+  if (!location) {
+    await log(
+      req.user.user_id,
+      req.user.email,
+      null,
+      "Failed to Insert LOCs from file to database",
+      "POST"
+    );
+    return res
+      .status(400)
+      .json({ error: "Location with given id doesn't exist!" });
+  }
+  let hasAccess = false;
+  if (req.user.role === "admin") {
+    hasAccess = true;
+  }
+  if (req.user.role === "super user") {
+    hasAccess =
+      location.User.user_id === req.user.user_id ||
+      location.User.sup_id === req.user.user_id;
+  } else if (req.user.role === "user") {
+    hasAccess = location.User.user_id === req.user.user_id;
+    // || location.User.sup_id === req.user.sup_id ||
+    // location.User.user_id === req.user.sup_id;
+  }
+  if (!hasAccess) {
+    await log(
+      req.user.user_id,
+      req.user.email,
+      globalIdentifier.gid,
+      "Failed to Insert LOCs from file to database",
+      "POST"
+    );
+    return res
+      .status(400)
+      .json({ error: "Location with given id doesn't exist!" });
+  }
+
+  // convert req.file.buffer to Uint8Array
+  const ab = new ArrayBuffer(req.file.buffer.length);
+  const view = new Uint8Array(ab);
+  for (let i = 0; i < req.file.buffer.length; ++i) {
+    view[i] = req.file.buffer[i];
+  }
+
+  const wb = xlsx.readFile(ab);
+  const ws = wb.Sheets["LOC_data"];
+  const data = xlsx.utils.sheet_to_json(ws);
+  const errors = await this.validateLOCs(data, req.user, location_id);
+  if (errors[0] && errors[0].length) {
+    await log(
+      req.user.user_id,
+      req.user.email,
+      null,
+      "Failed to Insert LOCs from file to database",
+      "POST"
+    );
+    return res.status(400).json(errors[0]);
+  }
+  try {
+    data.map(async (locData) => {
+      const locBody = {
+        route_id: locData.route_id,
+        origin: locData.origin,
+        field_1: locData.field_1,
+        field_2: locData.field_2,
+        field_3: locData.field_3,
+        MISC: locData.MISC,
+        LOC_type: locData.LOC_type,
+        origin_status: req.body.origin_status,
+        location_id: location_id,
+      };
+      const newLOC = await createLOC(locBody, req.user.user_id);
+      const destinationBody = {
+        destination: locData.destination,
+        destination_field_1: locData.destination_field_1,
+        destination_field_2: locData.destination_field_2,
+        destination_field_3: locData.destination_field_3,
+        longitude: locData.longitude,
+        latitude: locData.latitude,
+        radius: locData.radius,
+        destination_status: locData.destination_status,
+      };
+      if (
+        locData.LOC_type === "dual" &&
+        Object.values(destinationBody).filter((value) => value !== undefined)
+          .length
+      ) {
+        await createLOCDestination(destinationBody, newLOC.loc_id);
+      }
+    });
+    await log(
+      req.user.user_id,
+      req.user.email,
+      globalIdentifier.gid,
+      "Insert LOCs from file to database",
+      "POST"
+    );
+    res.json({ message: "Data inserted successfully.." });
+  } catch (e) {
+    await log(
+      req.user.user_id,
+      req.user.email,
+      null,
+      "Failed to Insert LOCs from file to database",
+      "POST"
     );
     res.status(500).json({ error: e.message });
   }
