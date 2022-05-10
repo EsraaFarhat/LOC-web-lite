@@ -200,7 +200,7 @@ exports.validateLOC = (loc) => {
     field_1: Joi.string().trim().max(200).required(),
     field_2: Joi.string().trim().max(200).required(),
     field_3: Joi.string().trim().max(200).required(),
-    MISC: Joi.string().trim().max(100).required(),
+    MISC: Joi.string().trim().max(100),
     LOC_type: Joi.string().trim().valid("single", "dual").required(),
     origin_status: Joi.string().trim().valid("assigned", "unassigned"),
     location_id: Joi.string().trim().required(),
