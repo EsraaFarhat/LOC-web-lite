@@ -558,6 +558,7 @@ exports.updateLOCHandler = async (req, res) => {
       //     location_id: loc.location_id,
       //   });
       // } else
+      let = order = "";
       if (req.user.role === "super user") {
         locByRouteID = await getLOCsForSuperUser(
           { route_id: req.body.route_id, location_id: loc.location_id },
@@ -624,57 +625,115 @@ exports.updateLOCHandler = async (req, res) => {
     if (!locBody.sync) locBody.sync = false;
     updatedLOC = await updateLOC(id, locBody);
 
-    if (loc.LOC_type === "dual" && Object.keys(destinationBody).length) {
-      const { error } = validateUpdateLOCDestination(destinationBody);
-      if (error) {
+    if (loc.LOC_type === "dual") {
+      let updatedDestination = loc.LOCDestination;
+      if (
+        Object.values(destinationBody).filter((value) => value !== undefined)
+          .length
+      ) {
+        if (loc.LOCDestination === null) {
+          const { error } = validateLOCDestination(destinationBody);
+          if (error) {
+            await log(
+              req.user.user_id,
+              req.user.email,
+              gid,
+              `Failed to update dual LOC ${loc.route_id} (Destination validation error)`,
+              "PATCH"
+            );
+            return res.status(400).json({
+              error: _.map(error.details, (detail) =>
+                _.pick(detail, ["message"])
+              ),
+            });
+          }
+          if (!destinationBody.destination_sync)
+            destinationBody.destination_sync = false;
+          updatedDestination = await createLOCDestination(destinationBody);
+        } else {
+          const { error } = validateUpdateLOCDestination(destinationBody);
+          if (error) {
+            await log(
+              req.user.user_id,
+              req.user.email,
+              gid,
+              `Failed to update dual LOC ${loc.route_id} (Destination validation error)`,
+              "PATCH"
+            );
+            return res.status(400).json({
+              error: _.map(error.details, (detail) =>
+                _.pick(detail, ["message"])
+              ),
+            });
+          }
+          if (!destinationBody.destination_sync)
+            destinationBody.destination_sync = false;
+          updatedDestination = await updateLOCDestination(id, destinationBody);
+        }
+
         await log(
           req.user.user_id,
           req.user.email,
           gid,
-          `Failed to update dual LOC on local server (Destination validation error)`,
+          `Update dual LOC (${id}) on local server with data ${JSON.stringify(
+            req.body
+          )}`,
           "PATCH"
         );
-        return res.status(400).json({
-          error: _.map(error.details, (detail) => _.pick(detail, ["message"])),
-        });
+
+        if (updatedLOC[1]) {
+          return res.json({
+            message: "Dual LOC updated successfully..",
+            loc: {
+              ...updatedLOC[1][0].dataValues,
+              ...updatedDestination[1][0].dataValues,
+            },
+          });
+        } else {
+          return res.json({
+            message: "Dual LOC updated successfully..",
+            loc: {
+              ...loc.dataValues,
+              ...updatedDestination[1][0].dataValues,
+            },
+          });
+        }
       }
-
-      if (!destinationBody.destination_sync)
-        destinationBody.destination_sync = false;
-      const updatedDestination = await updateLOCDestination(
-        id,
-        destinationBody
-      );
-
-      await log(
-        req.user.user_id,
-        req.user.email,
-        gid,
-        `Update dual LOC (${id}) on local server with data ${JSON.stringify(
-          req.body
-        )}`,
-        "PATCH"
-      );
-
-      if (updatedLOC[1]) {
-        return res.json({
-          message: "Dual LOC updated successfully..",
-          loc: {
-            ...updatedLOC[1][0].dataValues,
-            ...updatedDestination[1][0].dataValues,
-          },
-        });
-      } else {
-        return res.json({
-          message: "Dual LOC updated successfully..",
-          loc: {
-            ...loc.dataValues,
-            ...updatedDestination[1][0].dataValues,
-          },
-        });
+      if (updatedDestination !== null) {
+        if (updatedLOC[1]) {
+          await log(
+            req.user.user_id,
+            req.user.email,
+            gid,
+            `Update dual LOC ${updatedLOC[1][0].dataValues.route_id} (${id})`,
+            "PATCH"
+          );
+          return res.json({
+            message: "Dual LOC updated successfully..",
+            loc: {
+              ...updatedLOC[1][0].dataValues,
+              ...updatedDestination.dataValues,
+            },
+          });
+        } else {
+          await log(
+            req.user.user_id,
+            req.user.email,
+            gid,
+            `Update dual LOC ${loc.route_id} (${id})`,
+            "PATCH"
+          );
+          // loc = _.omit(loc.dataValues, ["LOCDestination", "Location", "User"]);
+          return res.json({
+            message: "Dual LOC updated successfully..",
+            loc: {
+              ...loc.dataValues,
+              ...updatedDestination.dataValues,
+            },
+          });
+        }
       }
     }
-
     await log(
       req.user.user_id,
       req.user.email,
