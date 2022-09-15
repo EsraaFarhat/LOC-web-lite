@@ -65,7 +65,7 @@ exports.LoginFromMain = async (req, error) => {
               let superUser = await findUserById(user.sup_id);
               if (!superUser) {
                 let response = await fetch(
-                  `${process.env.EC2_URL}/api/users/${user.sup_id}`,
+                  `${process.env.EC2_URL}/api/users/web-lite/${user.sup_id}`,
                   {
                     headers: {
                       Authorization: `Bearer ${token}`,

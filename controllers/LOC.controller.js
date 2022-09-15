@@ -413,6 +413,7 @@ exports.createLOCHandler = async (req, res) => {
     //     location_id: req.body.location_id,
     //   });
     // } else
+    let order = "";
     if (req.user.role === "super user") {
       loc = await getLOCsForSuperUser(
         { route_id: req.body.route_id, location_id: req.body.location_id },

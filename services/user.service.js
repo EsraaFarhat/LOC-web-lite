@@ -128,7 +128,7 @@ exports.UserLoginToMainServerHandler = async (email, password) => {
 
 exports.updateUsersData = async (token) => {
   try {
-    let response = await fetch(`${process.env.EC2_URL}/api/users`, {
+    let response = await fetch(`${process.env.EC2_URL}/api/users/web-lite`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
