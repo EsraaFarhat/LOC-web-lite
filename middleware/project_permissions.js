@@ -1,6 +1,9 @@
 const uuid = require("uuid");
 
 const { log } = require("../controllers/log.controller");
+const {
+  findUserAssignedToGlobalIdentifier,
+} = require("../services/globalIdentifier.service");
 const { getProjectWithUser } = require("../services/project.service");
 
 exports.canGetLocations = async (req, res, next) => {
@@ -38,17 +41,27 @@ exports.canGetLocations = async (req, res, next) => {
      ** OR you are not the user created this project
      */
     let hasAccess = false;
-    if (req.user.role === "admin") {
+    if (req.user.role === "saas admin") {
       hasAccess = true;
-    }
-    if (req.user.role === "super user") {
+    } else if (req.user.role === "super admin") {
+      hasAccess = project.GlobalIdentifier.org_id === req.user.org_id;
+    } else if (req.user.role === "super user") {
       hasAccess =
-        project.User.user_id === req.user.user_id ||
-        project.User.sup_id === req.user.user_id;
-    } else if (req.user.role === "user") {
-      hasAccess = project.User.user_id === req.user.user_id;
-      // || project.User.sup_id === req.user.sup_id ||
-      // project.User.user_id === req.user.sup_id;
+        project.GlobalIdentifier.user_id === req.user.user_id ||
+        (project.GlobalIdentifier.org_id === req.user.org_id &&
+          project.GlobalIdentifier.privacy === "public") ||
+        (await findUserAssignedToGlobalIdentifier({
+          gid: project.gid,
+          user_id: req.user.user_id,
+        }));
+    } else {
+      hasAccess =
+        (project.GlobalIdentifier.org_id === req.user.org_id &&
+          project.GlobalIdentifier.privacy === "public") ||
+        (await findUserAssignedToGlobalIdentifier({
+          gid: project.gid,
+          user_id: req.user.user_id,
+        }));
     }
 
     if (!hasAccess) {

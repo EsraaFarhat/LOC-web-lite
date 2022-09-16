@@ -20,10 +20,12 @@ const {
   updateLOCDestination,
   getLOCsForSuperUser,
   getLOCsForUser,
+  getLOCsForSuperAdmin,
 } = require("../services/LOC.service");
 const {
   findLocationById,
   getLocationWithUser,
+  getLocationsForSuperAdmin,
 } = require("../services/location.service");
 const {
   findProjectById,
@@ -31,6 +33,7 @@ const {
 } = require("../services/project.service");
 const {
   getGlobalIdentifierWithUser,
+  findUserAssignedToGlobalIdentifier,
 } = require("../services/globalIdentifier.service");
 
 exports.getLOCsHandler = async (req, res) => {
@@ -43,6 +46,7 @@ exports.getLOCsHandler = async (req, res) => {
     let globalIdentifier = _.pick(project, [
       "GlobalIdentifier.gid",
       "GlobalIdentifier.name",
+      "GlobalIdentifier.privacy",
     ]).GlobalIdentifier;
     project = _.pick(project, ["id", "name"]);
     location = _.pick(location, ["id", "name"]);
@@ -82,7 +86,9 @@ exports.getLOCsHandler = async (req, res) => {
     // if (req.user.role === "admin") {
     //   LOCs = await getLOCs(filter);
     // } else
-    if (req.user.role === "super user") {
+    if (req.user.role === "super admin") {
+      LOCs = await getLOCsForSuperAdmin(filter, req.user, order);
+    } else if (req.user.role === "super user") {
       LOCs = await getLOCsForSuperUser(filter, req.user, order);
     } else if (req.user.role === "user") {
       LOCs = await getLOCsForUser(filter, req.user, order);
@@ -237,6 +243,7 @@ exports.getLOCHandler = async (req, res) => {
     let globalIdentifier = _.pick(project, [
       "GlobalIdentifier.gid",
       "GlobalIdentifier.name",
+      "GlobalIdentifier.privacy",
     ]).GlobalIdentifier;
     project = _.pick(project, ["id", "name"]);
     location = _.pick(location, ["id", "name"]);
@@ -560,7 +567,13 @@ exports.updateLOCHandler = async (req, res) => {
       //   });
       // } else
       let = order = "";
-      if (req.user.role === "super user") {
+      if (req.user.role === "super admin") {
+        locByRouteID = await getLOCsForSuperAdmin(
+          { route_id: req.body.route_id, location_id: loc.location_id },
+          req.user,
+          order
+        );
+      } else if (req.user.role === "super user") {
         locByRouteID = await getLOCsForSuperUser(
           { route_id: req.body.route_id, location_id: loc.location_id },
           req.user,
@@ -607,6 +620,55 @@ exports.updateLOCHandler = async (req, res) => {
       radius: req.body.radius,
       destination_status: req.body.destination_status,
     };
+
+    // User can only update the loc status
+    if (req.user.role === "user") {
+      if (
+        (locBody.route_id && locBody.route_id !== loc.route_id) ||
+        (locBody.origin && locBody.origin !== loc.origin) ||
+        (locBody.field_1 && locBody.field_1 !== loc.field_1) ||
+        (locBody.field_2 && locBody.field_2 !== loc.field_2) ||
+        (locBody.field_3 && locBody.field_3 !== loc.field_3) ||
+        (locBody.MISC && locBody.MISC !== loc.MISC) ||
+        (destinationBody.destination &&
+          destinationBody.destination !== loc.destination) ||
+        (destinationBody.destination_field_1 &&
+          destinationBody.destination_field_1 !== loc.destination_field_1) ||
+        (destinationBody.destination_field_2 &&
+          destinationBody.destination_field_2 !== loc.destination_field_2) ||
+        (destinationBody.destination_field_3 &&
+          destinationBody.destination_field_3 !== loc.destination_field_3) ||
+        (destinationBody.longitude &&
+          destinationBody.longitude !== loc.longitude) ||
+        (destinationBody.latitude &&
+          destinationBody.latitude !== loc.latitude) ||
+        (destinationBody.radius && destinationBody.radius !== loc.radius)
+      ) {
+        await log(
+          req.user.user_id,
+          req.user.email,
+          gid,
+          `Failed to update LOC ${loc.route_id} (Permission denied)`,
+          "PATCH"
+        );
+        return res.status(403).json({
+          error: "Permission denied.",
+        });
+      }
+      // const { error } = validateUpdateLOCForUser(req.body);
+      // if (error) {
+      //   await log(
+      //     req.user.user_id,
+      //     req.user.email,
+      //     gid,
+      //     `Failed to update LOC ${loc.route_id} (Validation error)`,
+      //     "PATCH"
+      //   );
+      //   return res.status(400).json({
+      //     error: _.map(error.details, (detail) => _.pick(detail, ["message"])),
+      //   });
+      // }
+    }
 
     // validate the request first
     let updatedLOC;
@@ -837,7 +899,13 @@ exports.validateLOCs = async (data, loggedInUser, location_id) => {
         //     order
         //   );
         // } else
-        if (loggedInUser.role === "super user") {
+        if (loggedInUser.role === "super admin") {
+          loc = await getLOCsForSuperAdmin(
+            { route_id: locBody.route_id, location_id },
+            loggedInUser,
+            order
+          );
+        } else if (loggedInUser.role === "super user") {
           loc = await getLOCsForSuperUser(
             { route_id: locBody.route_id, location_id },
             loggedInUser,
@@ -960,18 +1028,23 @@ exports.uploadFileHandler = async (req, res) => {
       .json({ error: "Location with given id doesn't exist!" });
   }
   let hasAccess = false;
-  if (req.user.role === "admin") {
+  if (req.user.role === "saas admin") {
     hasAccess = true;
-  }
-  if (req.user.role === "super user") {
+  } else if (req.user.role === "super admin") {
+    hasAccess = location.Project.GlobalIdentifier.org_id === req.user.org_id;
+  } else if (req.user.role === "super user") {
     hasAccess =
-      location.User.user_id === req.user.user_id ||
-      location.User.sup_id === req.user.user_id;
-  } else if (req.user.role === "user") {
-    hasAccess = location.User.user_id === req.user.user_id;
-    // || location.User.sup_id === req.user.sup_id ||
-    // location.User.user_id === req.user.sup_id;
+      location.Project.GlobalIdentifier.user_id === req.user.user_id ||
+      (location.Project.GlobalIdentifier.User.org_id === req.user.org_id &&
+        location.Project.GlobalIdentifier.privacy === "public") ||
+      (await findUserAssignedToGlobalIdentifier({
+        gid: location.Project.gid,
+        user_id: req.user.user_id,
+      }));
+  } else {
+    hasAccess = false;
   }
+
   if (!hasAccess) {
     await log(
       req.user.user_id,

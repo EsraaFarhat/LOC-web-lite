@@ -86,6 +86,7 @@ exports.getLocationHandler = async (req, res) => {
     let globalIdentifier = _.pick(project, [
       "GlobalIdentifier.gid",
       "GlobalIdentifier.name",
+      "GlobalIdentifier.privacy",
     ]).GlobalIdentifier;
     project = _.pick(project, ["id", "name"]);
 
@@ -146,7 +147,6 @@ exports.downloadLocationHandler = async (req, res) => {
     );
 
     const data = await response.json();
-    console.log(data);
 
     if (data.error) {
       await log(
@@ -397,85 +397,92 @@ exports.downloadLocationHandler = async (req, res) => {
   }
 };
 
-exports.uploadLOCs = async (data, token) => {
+exports.syncLOCs = async (data, token) => {
   return new Promise((resolve, reject) => {
-    let errors = [];
+    let error = {};
     const promises = data.map((local_loc, index) => {
       return new Promise(async (res, rej) => {
         let err;
-        if (local_loc.sync === false) {
-          let loc = await fetch(
-            `${process.env.EC2_URL}/api/LOCs/${local_loc.loc_id}`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
-          loc = await loc.json();
-          if (loc.error === "LOC doesn't exist!") {
-            // local_loc.dataValues
-            let response = await fetch(
-              `${process.env.EC2_URL}/api/LOCs/uploadFromLite`,
-              {
-                method: "post",
-                body: JSON.stringify(local_loc.dataValues),
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  "Content-Type": "application/json",
-                },
-              }
-            );
-            response = await response.json();
-            if (response.error) {
-              err = {
-                error: `Couldn't upload loc ${local_loc.loc_id}`,
-                reason: response.error,
-              };
-              await updateLOC(local_loc.loc_id, { sync: true });
-            } else {
-              await updateLOC(local_loc.loc_id, { sync: true });
-              console.log("loc created");
-            }
-          } else if (loc.error) {
-            err = {
-              error: `Couldn't upload loc ${local_loc.loc_id}`,
-              reason: loc.error,
-            };
-          } else {
-            let response = await fetch(
-              `${process.env.EC2_URL}/api/LOCs/${local_loc.loc_id}/uploadFromLite`,
-              {
-                method: "patch",
-                body: JSON.stringify(local_loc.dataValues),
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  "Content-Type": "application/json",
-                },
-              }
-            );
-            response = await response.json();
-            if (response.error) {
-              err = {
-                error: `Couldn't upload loc ${local_loc.loc_id}`,
-                reason: response.error,
-              };
-              await updateLOC(local_loc.loc_id, { sync: true });
-            } else {
-              console.log("loc updated");
-              await updateLOC(local_loc.loc_id, { sync: true });
-            }
-          }
+        try {
+          await updateLOC(local_loc.loc_id, { sync: true });
+        } catch (e) {
+          // errors.push(e.message);
+          error = e.message;
         }
 
-        if (err) {
-          errors.push(err);
-        }
-        res(errors);
+        // if (local_loc.sync === false) {
+        //   let loc = await fetch(
+        //     `${process.env.EC2_URL}/api/LOCs/${local_loc.loc_id}`,
+        //     {
+        //       headers: {
+        //         Authorization: `Bearer ${token}`,
+        //       },
+        //     }
+        //   );
+        //   loc = await loc.json();
+        //   if (loc.error === "LOC doesn't exist!") {
+        //     // local_loc.dataValues
+        //     let response = await fetch(
+        //       `${process.env.EC2_URL}/api/LOCs/uploadFromLite`,
+        //       {
+        //         method: "post",
+        //         body: JSON.stringify(local_loc.dataValues),
+        //         headers: {
+        //           Authorization: `Bearer ${token}`,
+        //           "Content-Type": "application/json",
+        //         },
+        //       }
+        //     );
+        //     response = await response.json();
+        //     if (response.error) {
+        //       err = {
+        //         error: `Couldn't upload loc ${local_loc.loc_id}`,
+        //         reason: response.error,
+        //       };
+        //       await updateLOC(local_loc.loc_id, { sync: true });
+        //     } else {
+        //       await updateLOC(local_loc.loc_id, { sync: true });
+        //       console.log("loc created");
+        //     }
+        //   } else if (loc.error) {
+        //     err = {
+        //       error: `Couldn't upload loc ${local_loc.loc_id}`,
+        //       reason: loc.error,
+        //     };
+        //   } else {
+        //     let response = await fetch(
+        //       `${process.env.EC2_URL}/api/LOCs/${local_loc.loc_id}/uploadFromLite`,
+        //       {
+        //         method: "patch",
+        //         body: JSON.stringify(local_loc.dataValues),
+        //         headers: {
+        //           Authorization: `Bearer ${token}`,
+        //           "Content-Type": "application/json",
+        //         },
+        //       }
+        //     );
+        //     response = await response.json();
+        //     if (response.error) {
+        //       err = {
+        //         error: `Couldn't upload loc ${local_loc.loc_id}`,
+        //         reason: response.error,
+        //       };
+        //       await updateLOC(local_loc.loc_id, { sync: true });
+        //     } else {
+        //       console.log("loc updated");
+        //       await updateLOC(local_loc.loc_id, { sync: true });
+        //     }
+        //   }
+        // }
+
+        // if (err) {
+        //   errors.push(err);
+        // }
+        res();
       });
     });
-    Promise.all(promises).then((outs) => {
-      return resolve(outs);
+    Promise.all(promises).then(() => {
+      return resolve({ data, error });
     });
   });
 };
@@ -508,22 +515,64 @@ exports.uploadLocationHandler = async (req, res) => {
     }
 
     let order = "";
-    const LOCs = await getLOCsByLocationId(id, req.user, order);
+    let LOCs = await getLOCsByLocationId(id, req.user, order);
 
-    const errors = await this.uploadLOCs(LOCs, req.user.token);
+    LOCs = _.map(LOCs, (loc) => _.omit(loc.dataValues, ["Location", "User"]));
 
-    if (errors[0].length) {
+    let response = await fetch(`${process.env.EC2_URL}/api/LOCs/sync-locs`, {
+      method: "post",
+      body: JSON.stringify(LOCs),
+      headers: {
+        Authorization: `Bearer ${req.user.token}`,
+        "Content-Type": "application/json",
+      },
+    });
+    response = await response.json();
+
+    if (response.error) {
       await log(
         req.user.user_id,
         req.user.email,
         null,
-        `Upload Location with id (${req.params.id}) completed with errors`,
+        `Failed to upload Location with id (${req.params.id})`,
         "POST"
       );
       return res
         .status(400)
-        .json({ message: "Upload completed with errors", error: errors[0] });
+        .json({ error: `Couldn't upload locs`, reason: response.error });
+    } else {
+      const { error } = await this.syncLOCs(LOCs, req.user.token);
+
+      if (Object.keys(error).length) {
+        await log(
+          req.user.user_id,
+          req.user.email,
+          null,
+          `Upload Location with id (${req.params.id}) completed with errors`,
+          "POST"
+        );
+        return res
+          .status(400)
+          .json({ message: "Upload completed with errors", error });
+      }
+
+      // await updateLOC(local_loc.loc_id, { sync: true });
+      // await updateLOC(local_loc.loc_id, { sync: true });
+      // console.log("loc created");
     }
+
+    // if (errors[0].length) {
+    //   await log(
+    //     req.user.user_id,
+    //     req.user.email,
+    //     null,
+    //     `Upload Location with id (${req.params.id}) completed with errors`,
+    //     "POST"
+    //   );
+    //   return res
+    //     .status(400)
+    //     .json({ message: "Upload completed with errors", error: errors[0] });
+    // }
 
     await log(
       req.user.user_id,

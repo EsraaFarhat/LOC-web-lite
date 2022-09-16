@@ -1,6 +1,7 @@
 const uuid = require("uuid");
 
 const { log } = require("../controllers/log.controller");
+const { findUserAssignedToGlobalIdentifier } = require("../services/globalIdentifier.service");
 const { getLocationWithUser } = require("../services/location.service");
 
 exports.canGetLocation = async (req, res, next) => {
@@ -33,19 +34,30 @@ exports.canGetLocation = async (req, res, next) => {
      ** OR you are not the user created this location
      ** OR this location wasn't created by your super user or any user in your company
      */
-    let hasAccess = false;
-    if (req.user.role === "admin") {
-      hasAccess = true;
-    }
-    if (req.user.role === "super user") {
-      hasAccess =
-        location.User.user_id === req.user.user_id ||
-        location.User.sup_id === req.user.user_id;
-    } else if (req.user.role === "user") {
-      hasAccess = location.User.user_id === req.user.user_id;
-      // || location.User.sup_id === req.user.sup_id ||
-      // location.User.user_id === req.user.sup_id;
-    }
+     let hasAccess = false;
+     if (req.user.role === "saas admin") {
+       hasAccess = true;
+     } else if (req.user.role === "super admin") {
+       hasAccess = location.Project.GlobalIdentifier.org_id === req.user.org_id;
+     } else if (req.user.role === "super user") {
+       hasAccess =
+         location.Project.GlobalIdentifier.user_id === req.user.user_id ||
+         (location.Project.GlobalIdentifier.org_id === req.user.org_id &&
+           location.Project.GlobalIdentifier.privacy === "public") ||
+         (await findUserAssignedToGlobalIdentifier({
+           gid: location.Project.gid,
+           user_id: req.user.user_id,
+         }));
+     } else {
+       hasAccess =
+         (location.Project.GlobalIdentifier.org_id === req.user.org_id &&
+           location.Project.GlobalIdentifier.privacy === "public") ||
+         (await findUserAssignedToGlobalIdentifier({
+           gid: location.Project.gid,
+           user_id: req.user.user_id,
+         }));
+     } 
+
     if (!hasAccess) {
       await log(
         req.user.user_id,

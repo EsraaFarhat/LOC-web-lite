@@ -13,8 +13,13 @@ const {
   canGetLOC,
   canUpdate,
   canGetLocationForCreateLOC,
+  checkForTagsAvailability,
 } = require("../middleware/LOC_permissions");
 const { canGetLocation } = require("../middleware/location_permissions");
+const {
+  checkIfUserSuspended,
+  isSaasAdminOrSuperAdminSuperUser,
+} = require("../middleware/users_permissions");
 
 const router = express.Router();
 
@@ -35,12 +40,31 @@ router.get("/:id/:cable_status", [auth, canGetLocation], getLOCsHandler);
 router.get("/:id", [auth, canGetLOC], getLOCHandler);
 
 // Create New LOC [single/dual]
-router.post("/", [auth, canGetLocationForCreateLOC], createLOCHandler);
+router.post(
+  "/",
+  [
+    auth,
+    isSaasAdminOrSuperAdminSuperUser,
+    checkIfUserSuspended,
+    checkForTagsAvailability,
+    canGetLocationForCreateLOC,
+  ],
+  createLOCHandler
+);
 
 // Update LOC By Id
-router.patch("/:id", [auth, canUpdate], updateLOCHandler);
+router.patch("/:id", [auth, checkIfUserSuspended, canUpdate], updateLOCHandler);
 
 // Upload .xlsx file
-router.post("/upload/:id", [auth, upload.single("LocFile")], uploadFileHandler);
+router.post(
+  "/upload/:id",
+  [
+    auth,
+    isSaasAdminOrSuperAdminSuperUser,
+    checkIfUserSuspended,
+    upload.single("LocFile"),
+  ],
+  uploadFileHandler
+);
 
 module.exports = router;

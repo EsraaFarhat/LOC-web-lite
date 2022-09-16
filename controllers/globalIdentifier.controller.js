@@ -7,11 +7,13 @@ const { log } = require("./log.controller");
 const {
   getGlobalIdentifiersForSuperUser,
   getGlobalIdentifiersForUser,
+  getGlobalIdentifiersForSuperAdmin,
 } = require("../services/globalIdentifier.service");
 
 const {
   getProjectsForSuperUser,
   getProjectsForUser,
+  getProjectsForSuperAdmin,
 } = require("../services/project.service");
 
 exports.getAllGlobalIdentifiersHandler = async (req, res) => {
@@ -27,14 +29,11 @@ exports.getAllGlobalIdentifiersHandler = async (req, res) => {
 
     //            ****************Main server*****************
     if (req.query.mode === "main") {
-      response = await fetch(
-        `${process.env.EC2_URL}/api/globalIdentifiers`,
-        {
-          headers: {
-            Authorization: `Bearer ${req.user.token}`,
-          },
-        }
-      );
+      response = await fetch(`${process.env.EC2_URL}/api/globalIdentifiers`, {
+        headers: {
+          Authorization: `Bearer ${req.user.token}`,
+        },
+      });
       const data = await response.json();
       if (data.error) {
         await log(
@@ -61,11 +60,10 @@ exports.getAllGlobalIdentifiersHandler = async (req, res) => {
 
     //            ****************Local server*****************
     let globalIdentifiers;
-    if (req.user.role === "super user") {
-      globalIdentifiers = await getGlobalIdentifiersForSuperUser(
-        {},
-        req.user
-      );
+    if (req.user.role === "super admin") {
+      globalIdentifiers = await getGlobalIdentifiersForSuperAdmin({}, req.user);
+    } else if (req.user.role === "super user") {
+      globalIdentifiers = await getGlobalIdentifiersForSuperUser({}, req.user);
     } else {
       globalIdentifiers = await getGlobalIdentifiersForUser({}, req.user);
     }
@@ -144,7 +142,10 @@ exports.getProjectsForGlobalIdentifierHandler = async (req, res) => {
         `Fetch all projects for global identifier ${gid} from main server`,
         "GET"
       );
-      return res.json({ projects: data.projects, globalIdentifier: data.globalIdentifier });
+      return res.json({
+        projects: data.projects,
+        globalIdentifier: data.globalIdentifier,
+      });
     }
 
     //            ****************Local server*****************
@@ -155,10 +156,21 @@ exports.getProjectsForGlobalIdentifierHandler = async (req, res) => {
     // if (req.user.role === "admin") {
     //   projects = await getProjectsForAdmin(filter);
     // } else
-    if (req.user.role === "super user") {
-      projects = await getProjectsForSuperUser({gid: globalIdentifier.gid}, req.user);
+    if (req.user.role === "super admin") {
+      projects = await getProjectsForSuperAdmin(
+        { gid: globalIdentifier.gid },
+        req.user
+      );
+    } else if (req.user.role === "super user") {
+      projects = await getProjectsForSuperUser(
+        { gid: globalIdentifier.gid },
+        req.user
+      );
     } else if (req.user.role === "user") {
-      projects = await getProjectsForUser({gid: globalIdentifier.gid}, req.user);
+      projects = await getProjectsForUser(
+        { gid: globalIdentifier.gid },
+        req.user
+      );
     }
 
     await log(

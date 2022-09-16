@@ -1,8 +1,12 @@
 const uuid = require("uuid");
 
 const { log } = require("../controllers/log.controller");
+const {
+  findUserAssignedToGlobalIdentifier,
+} = require("../services/globalIdentifier.service");
 const { getLOCWithUser } = require("../services/LOC.service");
 const { getLocationWithUser } = require("../services/location.service");
+const { findUser } = require("../services/user.service");
 
 exports.canGetLOC = async (req, res, next) => {
   try {
@@ -36,18 +40,30 @@ exports.canGetLOC = async (req, res, next) => {
      ** OR this LOC wasn't created by your super user or any user in your company
      */
     let hasAccess = false;
-    if (req.user.role === "admin") {
+    if (req.user.role === "saas admin") {
       hasAccess = true;
-    }
-    if (req.user.role === "super user") {
+    } else if (req.user.role === "super admin") {
       hasAccess =
-        loc.User.user_id === req.user.user_id ||
-        loc.User.sup_id === req.user.user_id;
-    } else if (req.user.role === "user") {
-      hasAccess = loc.User.user_id === req.user.user_id;
-      // || loc.User.sup_id === req.user.sup_id ||
-      // loc.User.user_id === req.user.sup_id;
+        loc.Location.Project.GlobalIdentifier.org_id === req.user.org_id;
+    } else if (req.user.role === "super user") {
+      hasAccess =
+        loc.Location.Project.GlobalIdentifier.user_id === req.user.user_id ||
+        (loc.Location.Project.GlobalIdentifier.org_id === req.user.org_id &&
+          loc.Location.Project.GlobalIdentifier.privacy === "public") ||
+        (await findUserAssignedToGlobalIdentifier({
+          gid: loc.Location.Project.gid,
+          user_id: req.user.user_id,
+        }));
+    } else {
+      hasAccess =
+        (loc.Location.Project.GlobalIdentifier.org_id === req.user.org_id &&
+          loc.Location.Project.GlobalIdentifier.privacy === "public") ||
+        (await findUserAssignedToGlobalIdentifier({
+          gid: loc.Location.Project.gid,
+          user_id: req.user.user_id,
+        }));
     }
+
     if (!hasAccess) {
       await log(
         req.user.user_id,
@@ -112,18 +128,29 @@ exports.canGetLocationForCreateLOC = async (req, res, next) => {
      ** OR this location wasn't created by your super user or any user in your company
      */
     let hasAccess = false;
-    if (req.user.role === "admin") {
+    if (req.user.role === "saas admin") {
       hasAccess = true;
-    }
-    if (req.user.role === "super user") {
+    } else if (req.user.role === "super admin") {
+      hasAccess = location.Project.GlobalIdentifier.org_id === req.user.org_id;
+    } else if (req.user.role === "super user") {
       hasAccess =
-        location.User.user_id === req.user.user_id ||
-        location.User.sup_id === req.user.user_id;
-    } else if (req.user.role === "user") {
-      hasAccess = location.User.user_id === req.user.user_id;
-      // || location.User.sup_id === req.user.sup_id ||
-      // location.User.user_id === req.user.sup_id;
+        location.Project.GlobalIdentifier.user_id === req.user.user_id ||
+        (location.Project.GlobalIdentifier.org_id === req.user.org_id &&
+          location.Project.GlobalIdentifier.privacy === "public") ||
+        (await findUserAssignedToGlobalIdentifier({
+          gid: location.Project.gid,
+          user_id: req.user.user_id,
+        }));
+    } else {
+      hasAccess =
+        (location.Project.GlobalIdentifier.org_id === req.user.org_id &&
+          location.Project.GlobalIdentifier.privacy === "public") ||
+        (await findUserAssignedToGlobalIdentifier({
+          gid: location.Project.gid,
+          user_id: req.user.user_id,
+        }));
     }
+
     if (!hasAccess) {
       await log(
         req.user.user_id,
@@ -187,16 +214,30 @@ exports.canUpdate = async (req, res, next) => {
      ** OR you are not the user created this LOC
      */
     let hasAccess = false;
-    if (req.user.role === "admin") {
+    if (req.user.role === "saas admin") {
       hasAccess = true;
-    }
-    if (req.user.role === "super user") {
+    } else if (req.user.role === "super admin") {
       hasAccess =
-        loc.User.user_id === req.user.user_id ||
-        loc.User.sup_id === req.user.user_id;
-    } else if (req.user.role === "user") {
-      hasAccess = loc.User.user_id === req.user.user_id;
+        loc.Location.Project.GlobalIdentifier.org_id === req.user.org_id;
+    } else if (req.user.role === "super user") {
+      hasAccess =
+        loc.Location.Project.GlobalIdentifier.user_id === req.user.user_id ||
+        (loc.Location.Project.GlobalIdentifier.org_id === req.user.org_id &&
+          loc.Location.Project.GlobalIdentifier.privacy === "public") ||
+        (await findUserAssignedToGlobalIdentifier({
+          gid: loc.Location.Project.gid,
+          user_id: req.user.user_id,
+        }));
+    } else {
+      hasAccess =
+        (loc.Location.Project.GlobalIdentifier.org_id === req.user.org_id &&
+          loc.Location.Project.GlobalIdentifier.privacy === "public") ||
+        (await findUserAssignedToGlobalIdentifier({
+          gid: loc.Location.Project.gid,
+          user_id: req.user.user_id,
+        }));
     }
+
     if (!hasAccess) {
       await log(
         req.user.user_id,
@@ -217,6 +258,73 @@ exports.canUpdate = async (req, res, next) => {
       gid,
       `Failed to update LOC with id (${req.params.id})`,
       "PATCH"
+    );
+    return res.status(500).json({ error: e.message });
+  }
+};
+
+exports.checkForTagsAvailability = async (req, res, next) => {
+  const gid = req.body.gid ? req.body.gid : null;
+
+  try {
+    if (req.user.role === "saas admin") {
+      if (req.user.available_tags - 1 < -1000) {
+        await log(
+          req.user.user_id,
+          req.user.email,
+          gid,
+          `Failed to create LOC ${req.body.route_id} (No tags available)`,
+          "POST"
+        );
+
+        return res
+          .status(400)
+          .json({ error: "No tags available. You need to buy more tags." });
+      }
+    } else if (req.user.role === "super admin") {
+      if (req.user.available_tags <= 0) {
+        await log(
+          req.user.user_id,
+          req.user.email,
+          gid,
+          `Failed to create LOC ${req.body.route_id} (No tags available)`,
+          "POST"
+        );
+
+        return res.status(400).json({
+          error:
+            "Not tags available. Contact accounts@keltechiot.com for more tags.",
+        });
+      }
+    } else {
+      let admin = await findUser({
+        org_id: req.user.org_id,
+        role: "super admin",
+      });
+      if (admin.available_tags <= 0) {
+        await log(
+          req.user.user_id,
+          req.user.email,
+          gid,
+          `Failed to create LOC ${req.body.route_id} (No tags available)`,
+          "POST"
+        );
+
+        return res.status(400).json({
+          error: "Not tags available. Contact you super user for more tags.",
+        });
+      }
+
+      req.admin = admin;
+    }
+    next();
+  } catch (e) {
+    await log(
+      req.user.user_id,
+      req.user.email,
+      null,
+      `Failed to create LOC`,
+      "POST"
     );
     return res.status(500).json({ error: e.message });
   }

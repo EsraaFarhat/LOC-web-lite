@@ -1,7 +1,12 @@
 // const uuid = require("uuid");
 
+const GlobalIdentifier = require("../models/globalidentifier");
 const Location = require("../models/location");
+const Project = require("../models/project");
 const User = require("../models/user");
+const {
+  findUserAssignedToGlobalIdentifier,
+} = require("./globalIdentifier.service");
 // const User = require("../models/user");
 
 // const { findProjectById } = require("../services/project.service");
@@ -37,6 +42,22 @@ exports.getLocationWithUser = async (id) => {
       include: [
         {
           model: User,
+        },
+        {
+          model: Project,
+          attributes: ["gid"],
+          include: [
+            {
+              model: GlobalIdentifier,
+              attributes: ["user_id", "privacy", "org_id"],
+              include: [
+                {
+                  model: User,
+                  attributes: ["user_id"],
+                },
+              ],
+            },
+          ],
         },
       ],
     });
@@ -76,21 +97,84 @@ exports.getLocationsForProject = async (filter) => {
   }
 };
 
-exports.getLocationsForSuperUser = async (filter, loggedInUser) => {
+exports.getLocationsForSuperAdmin = async (filter, loggedInUser) => {
   try {
-    const locations = await Location.findAll({
+
+    let locations = await Location.findAll({
       where: filter,
       include: [
         {
           model: User,
         },
+        {
+          model: Project,
+          attributes: ["gid"],
+          include: [
+            {
+              model: GlobalIdentifier,
+              attributes: ["user_id", "privacy", "org_id"],
+              include: [
+                {
+                  model: User,
+                  attributes: ["user_id"],
+                },
+              ],
+            },
+          ],
+        },
       ],
     });
-    return locations.filter(
-      (location) =>
-        location.User.user_id === loggedInUser.user_id ||
-        location.User.sup_id === loggedInUser.user_id
+
+    locations = locations.filter(
+      async (location) =>
+        location.Project.GlobalIdentifier.org_id === loggedInUser.org_id
     );
+
+    return locations;
+  } catch (e) {
+    throw new Error(e.message);
+  }
+};
+
+exports.getLocationsForSuperUser = async (filter, loggedInUser) => {
+  try {
+    let locations = await Location.findAll({
+      where: filter,
+      include: [
+        {
+          model: User,
+        },
+        {
+          model: Project,
+          attributes: ["gid"],
+          include: [
+            {
+              model: GlobalIdentifier,
+              attributes: ["user_id", "privacy", "org_id"],
+              include: [
+                {
+                  model: User,
+                  attributes: ["user_id"],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    locations = locations.filter(
+      async (location) =>
+        location.Project.GlobalIdentifier.user_id === loggedInUser.user_id ||
+        (location.Project.GlobalIdentifier.org_id === loggedInUser.org_id &&
+          location.Project.GlobalIdentifier.privacy === "public") ||
+        (await findUserAssignedToGlobalIdentifier({
+          gid: location.Project.gid,
+          user_id: loggedInUser.user_id,
+        }))
+    );
+
+    return locations;
   } catch (e) {
     throw new Error(e.message);
   }
@@ -98,20 +182,42 @@ exports.getLocationsForSuperUser = async (filter, loggedInUser) => {
 
 exports.getLocationsForUser = async (filter, loggedInUser) => {
   try {
-    const locations = await Location.findAll({
+    let locations = await Location.findAll({
       where: filter,
       include: [
         {
           model: User,
         },
+        {
+          model: Project,
+          attributes: ["gid"],
+          include: [
+            {
+              model: GlobalIdentifier,
+              attributes: ["user_id", "privacy", "org_id"],
+              include: [
+                {
+                  model: User,
+                  attributes: ["user_id"],
+                },
+              ],
+            },
+          ],
+        },
       ],
     });
-    return locations.filter(
-      (location) =>
-        location.User.user_id === loggedInUser.user_id 
-        // || location.User.sup_id === loggedInUser.sup_id ||
-        // location.User.user_id === loggedInUser.sup_id
+
+    locations = locations.filter(
+      async (location) =>
+        (location.Project.GlobalIdentifier.org_id === loggedInUser.org_id &&
+          location.Project.GlobalIdentifier.privacy === "public") ||
+        (await findUserAssignedToGlobalIdentifier({
+          gid: location.Project.gid,
+          user_id: loggedInUser.user_id,
+        }))
     );
+
+    return locations;
   } catch (e) {
     throw new Error(e.message);
   }

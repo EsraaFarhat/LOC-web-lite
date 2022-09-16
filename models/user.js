@@ -6,6 +6,7 @@ const LOC = require("./LOC");
 const GlobalIdentifier = require("./globalidentifier");
 const Project = require("./project");
 const Location = require("./location");
+const Organization = require("./organization");
 
 class User extends Model {
   async hashPassword(password) {
@@ -44,7 +45,7 @@ User.init(
     },
     role: {
       type: DataTypes.ENUM,
-      values: ["admin", "super user", "user"],
+      values: ["saas admin", "super admin", "admin", "super user", "user"],
       defaultValue: "user",
     },
     token: {
@@ -63,16 +64,30 @@ User.init(
   }
 );
 
-User.hasMany(User, {
-  foreignKey: "sup_id",
+// User.hasMany(User, {
+//   foreignKey: "sup_id",
+//   as: "users",
+//   onDelete: "CASCADE",
+//   onUpdate: "CASCADE",
+// });
+
+// User.belongsTo(User, {
+//   foreignKey: "sup_id",
+//   as: "supervisor",
+//   onDelete: "CASCADE",
+//   onUpdate: "CASCADE",
+// });
+
+Organization.hasMany(User, {
+  foreignKey: "org_id",
   as: "users",
   onDelete: "CASCADE",
   onUpdate: "CASCADE",
 });
 
-User.belongsTo(User, {
-  foreignKey: "sup_id",
-  as: "supervisor",
+User.belongsTo(Organization, {
+  foreignKey: "org_id",
+  as: "organization",
   onDelete: "CASCADE",
   onUpdate: "CASCADE",
 });

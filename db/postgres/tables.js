@@ -6,6 +6,9 @@ require("../../models/project");
 require("../../models/location");
 require("../../models/LOC");
 require("../../models/LOC_destination");
+require("../../models/userGlobalidentifier");
+require("../../models/organization");
+require("../../models/userToken");
 
 (async function createTables() {
   try {
@@ -19,7 +22,7 @@ require("../../models/LOC_destination");
 
     console.log("Tables created successfully...");
     process.exit();
-} catch (error) {
+  } catch (error) {
     console.log(error);
     process.exit(1);
   }

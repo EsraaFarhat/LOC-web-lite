@@ -3,6 +3,7 @@ const uuid = require("uuid");
 const { log } = require("../controllers/log.controller");
 const {
   getGlobalIdentifierWithUser,
+  findUserAssignedToGlobalIdentifier,
 } = require("../services/globalIdentifier.service");
 
 exports.canGetProjects = async (req, res, next) => {
@@ -43,18 +44,27 @@ exports.canGetProjects = async (req, res, next) => {
      ** OR you are not the user created this global identifier
      */
     let hasAccess = false;
-    if (req.user.role === "admin") {
+    if (req.user.role === "saas admin") {
       hasAccess = true;
-    }
-    if (req.user.role === "super user") {
+    } else if (req.user.role === "super admin") {
+      hasAccess = globalIdentifier.org_id === req.user.org_id;
+    } else if (req.user.role === "super user") {
       hasAccess =
         globalIdentifier.User.user_id === req.user.user_id ||
-        globalIdentifier.User.sup_id === req.user.user_id;
-    } else if (req.user.role === "user") {
+        (globalIdentifier.org_id === req.user.org_id &&
+          globalIdentifier.privacy === "public") ||
+        (await findUserAssignedToGlobalIdentifier({
+          gid,
+          user_id: req.user.user_id,
+        }));
+    } else {
       hasAccess =
-        globalIdentifier.User.user_id === req.user.user_id 
-        // || globalIdentifier.User.sup_id === req.user.sup_id ||
-        // globalIdentifier.User.user_id === req.user.sup_id;
+        (globalIdentifier.org_id === req.user.org_id &&
+          globalIdentifier.privacy === "public") ||
+        (await findUserAssignedToGlobalIdentifier({
+          gid,
+          user_id: req.user.user_id,
+        }));
     }
 
     if (!hasAccess) {

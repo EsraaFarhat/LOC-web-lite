@@ -18,6 +18,10 @@ const {
   deleteUser,
   updateUser,
 } = require("../services/user.service");
+const {
+  findOrganizationById,
+  createOrganization,
+} = require("../services/organization.service");
 
 exports.LoginFromMain = async (req, error) => {
   return new Promise((resolve, reject) => {
@@ -25,6 +29,7 @@ exports.LoginFromMain = async (req, error) => {
       if (err) {
         return resolve({ error });
       } else {
+        let user;
         try {
           let response = await UserLoginToMainServerHandler(
             req.body.email,
@@ -37,9 +42,9 @@ exports.LoginFromMain = async (req, error) => {
             });
           } else {
             user = response.user;
-            if (user.role === "admin") {
+            if (user.role === "saas admin" || user.role === "admin") {
               return resolve({
-                error: "Cannot login to the server!",
+                error: "You have no access to the web lite!",
               });
             }
             // console.log(user);
@@ -59,32 +64,34 @@ exports.LoginFromMain = async (req, error) => {
             );
 
             user.token = token;
-            if (user.role === "super user") user.sup_id = null;
+            // if (user.role === "super user") user.sup_id = null;
             // console.log(user);
-            if (user.role === "user") {
-              let superUser = await findUserById(user.sup_id);
-              if (!superUser) {
-                let response = await fetch(
-                  `${process.env.EC2_URL}/api/users/web-lite/${user.sup_id}`,
-                  {
-                    headers: {
-                      Authorization: `Bearer ${token}`,
-                    },
-                  }
-                );
-                response = await response.json();
-                if (response.error) {
-                  return resolve({
-                    error: `Cannot create this user in database: ${response.error}`,
-                  });
+            // if (user.role === "super user" || user.role === "user") {
+            let organization = await findOrganizationById(user.org_id);
+            if (!organization) {
+              let response = await fetch(
+                `${process.env.EC2_URL}/api/organizations/${user.org_id}`,
+                {
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                  },
                 }
-                response.user.sup_id = null;
-                await createUser(response.user);
+              );
+              response = await response.json();
+              console.log(response);
+              if (response.error) {
+                return resolve({
+                  error: `Cannot create this user in database: ${response.error}`,
+                });
               }
+              await createOrganization(response.organization);
+              // response.user.sup_id = null;
+              // await createUser(user);
             }
+            // }
             // If the password change
             let oldUser = await findUser(user.email);
-            if(oldUser) await updateUser(oldUser.id, user);
+            if (oldUser) await updateUser(oldUser.user_id, user);
             else await createUser(user);
             resolve(user);
           }
@@ -127,8 +134,10 @@ exports.UserLoginHandler = async (req, res) => {
     );
     let token;
     if (user) {
-      if (user.role === "admin") {
-        return res.status(400).json({ error: "Cannot login to the server!" });
+      if (user.role === "saas admin" || user.role === "admin") {
+        return res
+          .status(400)
+          .json({ error: "You have no access to the web lite!" });
       }
       token = await generateAuthToken(user);
     } else if (err) {
@@ -157,86 +166,86 @@ exports.UserLoginHandler = async (req, res) => {
       "POST"
     );
 
-    if (user.role === "super user") {
-      const response = await updateUsersData(token);
-      if (response.errors) {
-        await log(
-          user.user_id,
-          user.email,
-          null,
-          `Failed to update all users for user ${user.user_id}`,
-          "POST"
-        );
+    // if (user.role === "super user") {
+    //   const response = await updateUsersData(token);
+    //   if (response.errors) {
+    //     await log(
+    //       user.user_id,
+    //       user.email,
+    //       null,
+    //       `Failed to update all users for user ${user.user_id}`,
+    //       "POST"
+    //     );
 
-        return res.json({
-          user: _.pick(user, [
-            "user_id",
-            "fullName",
-            "email",
-            "role",
-            "sup_id",
-          ]),
-          token,
-          message: "Users updated with errors",
-          errors: response.errors,
-        });
-      }
-      await log(
-        user.user_id,
-        user.email,
-        null,
-        `Update all users for user ${user.user_id}`,
-        "POST"
-      );
-      return res.json({
-        user: _.pick(user, ["user_id", "fullName", "email", "role", "sup_id"]),
-        token,
-        message: "Users updated successfully..",
-      });
-    }
+    //     return res.json({
+    //       user: _.pick(user, [
+    //         "user_id",
+    //         "fullName",
+    //         "email",
+    //         "role",
+    //         "sup_id",
+    //       ]),
+    //       token,
+    //       message: "Users updated with errors",
+    //       errors: response.errors,
+    //     });
+    //   }
+    //   await log(
+    //     user.user_id,
+    //     user.email,
+    //     null,
+    //     `Update all users for user ${user.user_id}`,
+    //     "POST"
+    //   );
+    //   return res.json({
+    //     user: _.pick(user, ["user_id", "fullName", "email", "role", "sup_id"]),
+    //     token,
+    //     message: "Users updated successfully..",
+    //   });
+    // }
 
     // !!!!!!!!!
-    if (user.role === "super user" && user.suspend) {
-      await log(
-        user.user_id,
-        user.email,
-        null,
-        `User ${user.email} failed to logged in (suspended)`,
-        "POST"
-      );
-      return res.status(403).json({
-        error: "You have been suspended, return to admin for more details...",
-      });
-    }
-    if (user.role === "user") {
-      if (user.suspend) {
-        await log(
-          user.user_id,
-          user.email,
-          null,
-          `User ${user.email} failed to logged in (suspended)`,
-          "POST"
-        );
-        return res.status(403).json({
-          error: "You have been suspended, return to admin for more details...",
-        });
-      } else {
-        const superuser = await findUserById(user.sup_id);
-        if (superuser.suspend) {
-          await log(
-            user.user_id,
-            user.email,
-            null,
-            `User ${user.email} failed to logged in (suspended)`,
-            "POST"
-          );
-          return res.status(403).json({
-            error:
-              "You have been suspended, return to admin for more details...",
-          });
-        }
-      }
-    }
+    // if (user.role === "super user" && user.suspend) {
+    //   await log(
+    //     user.user_id,
+    //     user.email,
+    //     null,
+    //     `User ${user.email} failed to logged in (suspended)`,
+    //     "POST"
+    //   );
+    //   return res.status(403).json({
+    //     error: "You have been suspended, return to admin for more details...",
+    //   });
+    // }
+    // if (user.role === "user") {
+    //   if (user.suspend) {
+    //     await log(
+    //       user.user_id,
+    //       user.email,
+    //       null,
+    //       `User ${user.email} failed to logged in (suspended)`,
+    //       "POST"
+    //     );
+    //     return res.status(403).json({
+    //       error: "You have been suspended, return to admin for more details...",
+    //     });
+    //   } else {
+    //     const superuser = await findUserById(user.sup_id);
+    //     if (superuser.suspend) {
+    //       await log(
+    //         user.user_id,
+    //         user.email,
+    //         null,
+    //         `User ${user.email} failed to logged in (suspended)`,
+    //         "POST"
+    //       );
+    //       return res.status(403).json({
+    //         error:
+    //           "You have been suspended, return to admin for more details...",
+    //       });
+    //     }
+    //   }
+    // }
 
     res.json({
       user: _.pick(user, ["user_id", "fullName", "email", "role", "sup_id"]),
@@ -253,3 +262,67 @@ exports.UserLoginHandler = async (req, res) => {
     res.status(400).json({ error: e.message });
   }
 };
+
+// exports.UserAppLoginHandler = async (req, res) => {
+//   try {
+//     // validate the request first
+//     const { error } = validateLogin(req.body);
+//     if (error) {
+//       await log(
+//         null,
+//         null,
+//         null,
+//         `Failed to login user ${req.body.email} (Validation error)`,
+//         "POST"
+//       );
+//       return res.status(400).json({
+//         error: _.map(error.details, (detail) => _.pick(detail, ["message"])),
+//       });
+//     }
+
+//     const user = await findUserByCredentials(req.body.email, req.body.password);
+//     if (user.role === "admin") {
+//       await log(
+//         user.user_id,
+//         user.email,
+//         null,
+//         `User ${user.email} failed to logged in (Has no access to the app)`,
+//         "POST"
+//       );
+//       return res.status(403).json({
+//         error: "You have no access to the app!",
+//       });
+//     }
+
+//     const token = await generateAuthToken(user);
+//     await log(
+//       user.user_id,
+//       user.email,
+//       null,
+//       `User ${user.email} logged in`,
+//       "POST"
+//     );
+
+//     res.json({
+//       user: _.pick(user, [
+//         "user_id",
+//         "fullName",
+//         "email",
+//         "role",
+//         "sup_id",
+//         "createdAt",
+//         "updatedAt",
+//       ]),
+//       token,
+//     });
+//   } catch (e) {
+//     await log(
+//       null,
+//       null,
+//       null,
+//       `Failed to login user ${req.body.email}`,
+//       "POST"
+//     );
+//     res.status(400).json({ error: e.message });
+//   }
+// };

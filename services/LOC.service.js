@@ -5,6 +5,11 @@ const LOC = require("../models/LOC");
 const LOCDestination = require("../models/LOC_destination");
 const User = require("../models/user");
 const Location = require("../models/location");
+const {
+  findUserAssignedToGlobalIdentifier,
+} = require("./globalIdentifier.service");
+const Project = require("../models/project");
+const GlobalIdentifier = require("../models/globalidentifier");
 
 exports.findLOCById = async (id) => {
   try {
@@ -39,6 +44,25 @@ exports.getLOCWithUser = async (loc_id) => {
         },
         {
           model: Location,
+          include: [
+            {
+              model: Project,
+              attributes: ["gid"],
+              include: [
+                {
+                  model: GlobalIdentifier,
+                  attributes: ["user_id", "privacy", "org_id"],
+                  include: [
+                    {
+                      model: User,
+                      attributes: ["user_id"],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+          // required: true,
         },
       ],
     });
@@ -67,12 +91,12 @@ exports.getLOC = async (loc_id) => {
   }
 };
 
-exports.getLOCsForSuperUser = async (filter, loggedInUser, order) => {
+exports.getLOCsForSuperAdmin = async (filter, loggedInUser, order) => {
   try {
     if (order === "") order = "createdAt";
     let type = order === "route_id" ? "ASC" : "DESC";
 
-    const locs = await LOC.findAll({
+    let locs = await LOC.findAll({
       where: filter,
       include: [
         {
@@ -85,16 +109,96 @@ exports.getLOCsForSuperUser = async (filter, loggedInUser, order) => {
         },
         {
           model: Location,
+          include: [
+            {
+              model: Project,
+              attributes: ["gid"],
+              include: [
+                {
+                  model: GlobalIdentifier,
+                  attributes: ["user_id", "privacy"],
+                  include: [
+                    {
+                      model: User,
+                      attributes: ["user_id"],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
           // required: true,
         },
       ],
       order: [[order, type]],
     });
-    return locs.filter(
-      (loc) =>
-        loc.User.user_id === loggedInUser.user_id ||
-        loc.User.sup_id === loggedInUser.user_id
+
+    locs = locs.filter(
+      async (loc) =>
+        loc.Location.Project.GlobalIdentifier.org_id === loggedInUser.org_id
     );
+
+    return locs;
+  } catch (e) {
+    throw new Error(e.message);
+  }
+};
+
+exports.getLOCsForSuperUser = async (filter, loggedInUser, order) => {
+  try {
+    if (order === "") order = "createdAt";
+    let type = order === "route_id" ? "ASC" : "DESC";
+
+    let locs = await LOC.findAll({
+      where: filter,
+      include: [
+        {
+          model: LOCDestination,
+          // required: true,
+        },
+        {
+          model: User,
+          // required: true,
+        },
+        {
+          model: Location,
+          include: [
+            {
+              model: Project,
+              attributes: ["gid"],
+              include: [
+                {
+                  model: GlobalIdentifier,
+                  attributes: ["user_id", "privacy"],
+                  include: [
+                    {
+                      model: User,
+                      attributes: ["user_id"],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+          // required: true,
+        },
+      ],
+      order: [[order, type]],
+    });
+
+    locs = locs.filter(
+      async (loc) =>
+        loc.Location.Project.GlobalIdentifier.user_id ===
+          loggedInUser.user_id ||
+        (loc.Location.Project.GlobalIdentifier.org_id === loggedInUser.org_id &&
+          loc.Location.Project.GlobalIdentifier.privacy === "public") ||
+        (await findUserAssignedToGlobalIdentifier({
+          gid: loc.Location.Project.gid,
+          user_id: loggedInUser.user_id,
+        }))
+    );
+
+    return locs;
   } catch (e) {
     throw new Error(e.message);
   }
@@ -105,7 +209,7 @@ exports.getLOCsForUser = async (filter, loggedInUser, order) => {
     if (order === "") order = "createdAt";
     let type = order === "route_id" ? "ASC" : "DESC";
 
-    const locs = await LOC.findAll({
+    let locs = await LOC.findAll({
       where: filter,
       include: [
         {
@@ -118,16 +222,42 @@ exports.getLOCsForUser = async (filter, loggedInUser, order) => {
         },
         {
           model: Location,
+          include: [
+            {
+              model: Project,
+              attributes: ["gid"],
+              include: [
+                {
+                  model: GlobalIdentifier,
+                  attributes: ["user_id", "privacy"],
+                  include: [
+                    {
+                      model: User,
+                      attributes: ["user_id"],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
           // required: true,
         },
       ],
       order: [[order, type]],
     });
-    return locs.filter(
-      (loc) => loc.User.user_id === loggedInUser.user_id
-      // || loc.User.sup_id === loggedInUser.sup_id ||
-      // loc.User.user_id === loggedInUser.sup_id
+
+    locs = locs.filter(
+      async (loc) =>
+        (loc.Location.Project.GlobalIdentifier.org_id === loggedInUser.org_id &&
+          loc.Location.Project.GlobalIdentifier.privacy === "public") ||
+        (await findUserAssignedToGlobalIdentifier({
+          gid: loc.Location.Project.gid,
+          user_id: loggedInUser.user_id,
+        }))
     );
+
+    return locs;
+    // );
   } catch (e) {
     throw new Error(e.message);
   }
@@ -256,7 +386,7 @@ exports.getLOCsByLocationId = async (location_id, loggedInUser, order) => {
     if (order === "") order = "createdAt";
     let type = order === "route_id" ? "ASC" : "DESC";
 
-    const LOCs = await LOC.findAll({
+    let LOCs = await LOC.findAll({
       where: { location_id },
       include: [
         {
@@ -265,6 +395,24 @@ exports.getLOCsByLocationId = async (location_id, loggedInUser, order) => {
         },
         {
           model: Location,
+          include: [
+            {
+              model: Project,
+              attributes: ["gid"],
+              include: [
+                {
+                  model: GlobalIdentifier,
+                  attributes: ["user_id", "privacy", "org_id"],
+                  include: [
+                    {
+                      model: User,
+                      attributes: ["user_id"],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
           // required: true,
         },
         {
@@ -274,18 +422,35 @@ exports.getLOCsByLocationId = async (location_id, loggedInUser, order) => {
       ],
       order: [[order, type]],
     });
-    if (loggedInUser.role === "super user") {
+    if (loggedInUser.role === "super admin") {
+      return (LOCs = LOCs.filter(
+        async (loc) =>
+          loc.Location.Project.GlobalIdentifier.org_id === loggedInUser.org_id
+      ));
+    } else if (loggedInUser.role === "super user") {
       return LOCs.filter(
-        (loc) =>
-          loc.User.user_id === loggedInUser.user_id ||
-          loc.User.sup_id === loggedInUser.user_id
+        async (loc) =>
+          loc.Location.Project.GlobalIdentifier.user_id ===
+            loggedInUser.user_id ||
+          (loc.Location.Project.GlobalIdentifier.org_id ===
+            loggedInUser.org_id &&
+            loc.Location.Project.GlobalIdentifier.privacy === "public") ||
+          (await findUserAssignedToGlobalIdentifier({
+            gid: loc.Location.Project.gid,
+            user_id: loggedInUser.user_id,
+          }))
       );
     } else if (loggedInUser.role === "user") {
-      return LOCs.filter(
-        (loc) => loc.User.user_id === loggedInUser.user_id
-        // || loc.User.sup_id === loggedInUser.sup_id ||
-        // loc.User.user_id === loggedInUser.sup_id
-      );
+      return (LOCs = LOCs.filter(
+        async (loc) =>
+          (loc.Location.Project.GlobalIdentifier.org_id ===
+            loggedInUser.org_id &&
+            loc.Location.Project.GlobalIdentifier.privacy === "public") ||
+          (await findUserAssignedToGlobalIdentifier({
+            gid: loc.Location.Project.gid,
+            user_id: loggedInUser.user_id,
+          }))
+      ));
     }
     return LOCs;
   } catch (e) {

@@ -1,6 +1,7 @@
 const GlobalIdentifier = require("../models/globalidentifier");
 const Project = require("../models/project");
 const User = require("../models/user");
+const { findUserAssignedToGlobalIdentifier } = require("./globalIdentifier.service");
 
 exports.findProjectById = async (id) => {
   try {
@@ -86,21 +87,68 @@ exports.getProjectsForGlobalIdentifier = async (filter) => {
   }
 };
 
-exports.getProjectsForSuperUser = async (filter, loggedInUser) => {
+exports.getProjectsForSuperAdmin = async (filter, loggedInUser) => {
   try {
-    const projects = await Project.findAll({
+    let projects = await Project.findAll({
       where: filter,
       include: [
         {
           model: User,
         },
+        {
+          model: GlobalIdentifier,
+          include: [
+            {
+              model: User,
+              attributes: ["user_id"],
+            },
+          ],
+        },
       ],
     });
-    return projects.filter(
-      (project) =>
-        project.User.user_id === loggedInUser.user_id ||
-        project.User.sup_id === loggedInUser.user_id
+
+    projects = projects.filter(
+      async (project) => project.GlobalIdentifier.org_id === loggedInUser.org_id
     );
+
+    return projects;
+  } catch (e) {
+    throw new Error(e.message);
+  }
+};
+
+exports.getProjectsForSuperUser = async (filter, loggedInUser) => {
+  try {
+    let projects = await Project.findAll({
+      where: filter,
+      include: [
+        {
+          model: User,
+        },
+        {
+          model: GlobalIdentifier,
+          include: [
+            {
+              model: User,
+              attributes: ["user_id"],
+            },
+          ],
+        },
+      ],
+    });
+
+    projects = projects.filter(
+      async (project) =>
+        project.GlobalIdentifier.user_id === loggedInUser.user_id ||
+        (project.GlobalIdentifier.org_id === loggedInUser.org_id &&
+          project.GlobalIdentifier.privacy === "public") ||
+        (await findUserAssignedToGlobalIdentifier({
+          gid: project.gid,
+          user_id: loggedInUser.user_id,
+        }))
+    );
+
+    return projects;
   } catch (e) {
     throw new Error(e.message);
   }
@@ -108,20 +156,35 @@ exports.getProjectsForSuperUser = async (filter, loggedInUser) => {
 
 exports.getProjectsForUser = async (filter, loggedInUser) => {
   try {
-    const projects = await Project.findAll({
+    let projects = await Project.findAll({
       where: filter,
       include: [
         {
           model: User,
         },
+        {
+          model: GlobalIdentifier,
+          include: [
+            {
+              model: User,
+              attributes: ["user_id"],
+            },
+          ],
+        },
       ],
     });
-    return projects.filter(
-      (project) =>
-        project.User.user_id === loggedInUser.user_id 
-        // || project.User.sup_id === loggedInUser.sup_id ||
-        // project.User.user_id === loggedInUser.sup_id
+
+    projects = projects.filter(
+      async (project) =>
+        (project.GlobalIdentifier.org_id === loggedInUser.org_id &&
+          project.GlobalIdentifier.privacy === "public") ||
+        (await findUserAssignedToGlobalIdentifier({
+          gid: project.gid,
+          user_id: loggedInUser.user_id,
+        }))
     );
+
+    return projects;
   } catch (e) {
     throw new Error(e.message);
   }

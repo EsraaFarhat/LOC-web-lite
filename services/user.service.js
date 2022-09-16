@@ -143,7 +143,7 @@ exports.updateUsersData = async (token) => {
     }
     let errors = [];
     response.users.forEach(async (user) => {
-      if (user.role === "super user") user.sup_id = null;
+      // if (user.role === "super user") user.sup_id = null;
       let local_user = await this.findUserById(user.user_id);
       if (!local_user) {
         try {

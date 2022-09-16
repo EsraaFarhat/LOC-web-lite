@@ -7,6 +7,7 @@ const { log } = require("../controllers/log.controller");
 
 const auth = async (req, res, next) => {
   try {
+
     const authToken = req.header("Authorization").replace("Bearer ", "");
     const loggedInUser = await User.findOne({ where: { token: authToken } });
 
