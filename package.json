@@ -4,21 +4,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js"
+    "start": "node index.js"
   },
   "engines": {
     "node": "17.7.0"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/EsraaFarhat/LOC-web-lite.git"
-  },
+  
   "author": "Esraa Farhat",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/EsraaFarhat/LOC-web-lite/issues"
-  },
+  
   "homepage": "https://github.com/EsraaFarhat/LOC-web-lite#readme",
   "dependencies": {
     "bcrypt": "^5.0.1",
