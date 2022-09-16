@@ -1,8 +1,7 @@
-const winston = require('winston');
-const express = require('express');
-const app = express();
+const app = require("./app");
 
-const port = process.env.PORT || 3000;
-app.listen(port, ()=> {
-    winston.info(`listening on port ${port}...`);
+const port = process.env.PORT || 3001;
+
+app.listen(port, () => {
+  console.log(`Server is listening at http://localhost:${port}`);
 });
