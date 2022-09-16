@@ -1,4 +1,4 @@
-const influx = require("../db/Influxdb/influxdb");
+// const influx = require("../db/Influxdb/influxdb");
 
 exports.log = async (
   user_id,
