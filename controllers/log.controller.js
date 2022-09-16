@@ -9,22 +9,22 @@ exports.log = async (
   state = false
 ) => {
   try {
-    await influx.writePoints([
-      {
-        measurement: "logs",
-        fields: {
-          user_name,
-          description,
-          state, //* true => seen, false => unseen
-        },
-        tags: {
-          user_id,
-          gid,
-          method,
-        },
-        timestamp: Date.now() * 1000000,
-      },
-    ]);
+    // await influx.writePoints([
+    //   {
+    //     measurement: "logs",
+    //     fields: {
+    //       user_name,
+    //       description,
+    //       state, //* true => seen, false => unseen
+    //     },
+    //     tags: {
+    //       user_id,
+    //       gid,
+    //       method,
+    //     },
+    //     timestamp: Date.now() * 1000000,
+    //   },
+    // ]);
   } catch (e) {
     throw new Error(e);
   }

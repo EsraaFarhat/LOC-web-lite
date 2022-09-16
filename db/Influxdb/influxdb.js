@@ -23,18 +23,18 @@ const influx = new InfluxDB({
     ],
 });
 
-influx
-.getDatabaseNames()
-.then((names) => {
-  if (!names.includes(influxDB_name)) {
-    return influx.createDatabase(influxDB_name);
-  }
-})
-.then(() => {
-  console.log("Connected to the influx database successfully...");
-})
-.catch((error) => {
-  throw new Error("Unable to connect to influx database: " + error);
-});
+// influx
+// .getDatabaseNames()
+// .then((names) => {
+//   if (!names.includes(influxDB_name)) {
+//     return influx.createDatabase(influxDB_name);
+//   }
+// })
+// .then(() => {
+//   console.log("Connected to the influx database successfully...");
+// })
+// .catch((error) => {
+//   throw new Error("Unable to connect to influx database: " + error);
+// });
 
 module.exports = influx;
