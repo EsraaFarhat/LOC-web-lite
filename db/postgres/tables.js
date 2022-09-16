@@ -10,7 +10,7 @@ require("../../models/userGlobalidentifier");
 require("../../models/organization");
 require("../../models/userToken");
 
-(async function createTables() {
+(async function createTables() { 
   try {
     await sequelize.sync({ force: true });
     // await sequelize.model("User").create({
