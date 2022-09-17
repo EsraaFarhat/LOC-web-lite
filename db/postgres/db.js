@@ -8,21 +8,7 @@ const db_host = process.env.DATABASE_HOST;
 const db_PORT = process.env.DATABASE_PORT;
 const db_dialect = process.env.DATABASE_DIALECT;
 
-const sequelize = new Sequelize(process.env.DATABASE_URL, {
-  dialectOptions: {
-    // ssl: false
-    ssl: {
-      require: true,
-      rejectUnauthorized: false,
-    },
-  },
-  logging: false
-});
-
-// const sequelize = new Sequelize(db_name, db_username, db_password, {
-//   host: db_host,
-//   port: db_PORT,
-//   dialect: db_dialect,
+// const sequelize = new Sequelize(process.env.DATABASE_URL, {
 //   dialectOptions: {
 //     // ssl: false
 //     ssl: {
@@ -30,8 +16,22 @@ const sequelize = new Sequelize(process.env.DATABASE_URL, {
 //       rejectUnauthorized: false,
 //     },
 //   },
-//   logging: false,
+//   logging: false
 // });
+
+const sequelize = new Sequelize(db_name, db_username, db_password, {
+  host: db_host,
+  port: db_PORT,
+  dialect: db_dialect,
+  dialectOptions: {
+    // ssl: false
+    ssl: {
+      require: true,
+      rejectUnauthorized: false,
+    },
+  },
+  logging: false,
+});
 
 sequelize
   .authenticate()
