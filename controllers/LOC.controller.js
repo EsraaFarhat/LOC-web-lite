@@ -1065,7 +1065,29 @@ exports.uploadFileHandler = async (req, res) => {
 
   const wb = xlsx.readFile(ab);
   const ws = wb.Sheets["LOC_data"];
+  if (!ws) {
+    await log(
+      req.user.user_id,
+      req.user.email,
+      globalIdentifier.gid,
+      "Failed to Insert LOCs from file to database",
+      "POST"
+    );
+    return res.status(400).json({ error: "Sheet LOC_data doesn't exist!" });
+  }
+
   const data = xlsx.utils.sheet_to_json(ws);
+  if (!data.length) {
+    await log(
+      req.user.user_id,
+      req.user.email,
+      globalIdentifier.gid,
+      "Failed to Insert LOCs from file to database",
+      "POST"
+    );
+    return res.status(400).json({ error: "Sheet LOC_data is empty!" });
+  }
+
   const errors = await this.validateLOCs(data, req.user, location_id);
   if (errors[0] && errors[0].length) {
     await log(
