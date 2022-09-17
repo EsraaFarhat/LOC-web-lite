@@ -98,6 +98,7 @@ exports.getLocationsForProjectHandler = async (req, res) => {
     globalIdentifier = _.pick(project, [
       "GlobalIdentifier.gid",
       "GlobalIdentifier.name",
+      "GlobalIdentifier.privacy",
     ]).GlobalIdentifier;
     project = _.pick(project, ["id", "name"]);
 

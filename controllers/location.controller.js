@@ -135,14 +135,11 @@ exports.downloadLocationHandler = async (req, res) => {
 
     const id = req.params.id;
 
-    response = await fetch(
-      `${EC2_URL}/api/locations/${id}/download`,
-      {
-        headers: {
-          Authorization: `Bearer ${req.user.token}`,
-        },
-      }
-    );
+    response = await fetch(`${EC2_URL}/api/locations/${id}/download`, {
+      headers: {
+        Authorization: `Bearer ${req.user.token}`,
+      },
+    });
 
     const data = await response.json();
 
@@ -159,6 +156,11 @@ exports.downloadLocationHandler = async (req, res) => {
         .json({ message: "Error from the main server", error: data.error });
     }
 
+    if (data.globalIdentifier.User.role === "saas admin")
+      data.globalIdentifier.user_id = null;
+    if (data.project.User.role === "saas admin") data.project.user_id = null;
+    if (data.location.User.role === "saas admin") data.location.user_id = null;
+
     let errors = [];
 
     let globalIdentifier = await findGlobalIdentifierById(
@@ -171,6 +173,7 @@ exports.downloadLocationHandler = async (req, res) => {
         data.globalIdentifier.name
       );
       if (globalIdentifier) await deleteGlobalIdentifier(globalIdentifier.gid);
+
       await createGlobalIdentifier(data.globalIdentifier);
       console.log("global identifier created");
       // } catch (e) {
@@ -185,6 +188,7 @@ exports.downloadLocationHandler = async (req, res) => {
       );
       if (globalIdentifier2 && globalIdentifier2.gid !== globalIdentifier.gid)
         await deleteGlobalIdentifier(globalIdentifier2.gid);
+
       await updateGlobalIdentifier(globalIdentifier.gid, data.globalIdentifier);
       console.log("global identifier updated");
       // } catch (e) {
@@ -239,6 +243,8 @@ exports.downloadLocationHandler = async (req, res) => {
       // }
     }
     data.singleLOCs.forEach(async (loc) => {
+      if (loc.User.role === "saas admin") loc.user_id = null;
+
       let local_loc = await findLOCById(loc.loc_id);
       loc.sync = true;
       if (!local_loc) {
@@ -264,6 +270,8 @@ exports.downloadLocationHandler = async (req, res) => {
       }
     });
     data.dualLOCs.forEach(async (loc) => {
+      if (loc.User.role === "saas admin") loc.user_id = null;
+
       let local_loc = await getLOC(loc.loc_id);
       if (!local_loc) {
         try {

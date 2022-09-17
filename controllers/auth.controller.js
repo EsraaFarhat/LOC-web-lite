@@ -168,41 +168,35 @@ exports.UserLoginHandler = async (req, res) => {
     );
 
     // if (user.role === "super user") {
-    //   const response = await updateUsersData(token);
-    //   if (response.errors) {
-    //     await log(
-    //       user.user_id,
-    //       user.email,
-    //       null,
-    //       `Failed to update all users for user ${user.user_id}`,
-    //       "POST"
-    //     );
+    const response = await updateUsersData(token);
+    if (response.errors) {
+      await log(
+        user.user_id,
+        user.email,
+        null,
+        `Failed to update all users for user ${user.user_id}`,
+        "POST"
+      );
 
-    //     return res.json({
-    //       user: _.pick(user, [
-    //         "user_id",
-    //         "fullName",
-    //         "email",
-    //         "role",
-    //         "sup_id",
-    //       ]),
-    //       token,
-    //       message: "Users updated with errors",
-    //       errors: response.errors,
-    //     });
-    //   }
-    //   await log(
-    //     user.user_id,
-    //     user.email,
-    //     null,
-    //     `Update all users for user ${user.user_id}`,
-    //     "POST"
-    //   );
-    //   return res.json({
-    //     user: _.pick(user, ["user_id", "fullName", "email", "role", "sup_id"]),
-    //     token,
-    //     message: "Users updated successfully..",
-    //   });
+      return res.json({
+        user: _.pick(user, ["user_id", "fullName", "email", "role", "org_id"]),
+        token,
+        message: "Users updated with errors",
+        errors: response.errors,
+      });
+    }
+    await log(
+      user.user_id,
+      user.email,
+      null,
+      `Update all users for user ${user.user_id}`,
+      "POST"
+    );
+    return res.json({
+      user: _.pick(user, ["user_id", "fullName", "email", "role", "org_id"]),
+      token,
+      message: "Users updated successfully..",
+    });
     // }
 
     // !!!!!!!!!
