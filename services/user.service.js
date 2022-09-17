@@ -106,7 +106,7 @@ exports.generateAuthToken = async (user) => {
 
 exports.UserLoginToMainServerHandler = async (email, password) => {
   try {
-    let response = await fetch(`${EC2_URL}/api/auth/login`, {
+    let response = await fetch(`${EC2_URL}/api/auth/app/login`, {
       method: "post",
       body: JSON.stringify({ email, password }),
       headers: {

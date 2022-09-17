@@ -79,7 +79,7 @@ exports.LoginFromMain = async (req, error) => {
                 }
               );
               response = await response.json();
-              console.log(response);
+
               if (response.error) {
                 return resolve({
                   error: `Cannot create this user in database: ${response.error}`,
@@ -192,7 +192,7 @@ exports.UserLoginHandler = async (req, res) => {
       `Update all users for user ${user.user_id}`,
       "POST"
     );
-    return res.json({
+    res.json({
       user: _.pick(user, ["user_id", "fullName", "email", "role", "org_id"]),
       token,
       message: "Users updated successfully..",
@@ -242,10 +242,10 @@ exports.UserLoginHandler = async (req, res) => {
     //   }
     // }
 
-    res.json({
-      user: _.pick(user, ["user_id", "fullName", "email", "role"]),
-      token,
-    });
+    // res.json({
+    //   user: _.pick(user, ["user_id", "fullName", "email", "role"]),
+    //   token,
+    // });
   } catch (e) {
     await log(
       null,
