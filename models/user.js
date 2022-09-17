@@ -92,45 +92,45 @@ User.belongsTo(Organization, {
   onUpdate: "CASCADE",
 });
 
-User.hasMany(GlobalIdentifier, {
-  foreignKey: "user_id",
-  onDelete: "CASCADE",
-  onUpdate: "CASCADE",
-});
+// User.hasMany(GlobalIdentifier, {
+//   foreignKey: "user_id",
+//   onDelete: "CASCADE",
+//   onUpdate: "CASCADE",
+// });
 
-GlobalIdentifier.belongsTo(User, {
-  foreignKey: "user_id",
-});
+// GlobalIdentifier.belongsTo(User, {
+//   foreignKey: "user_id",
+// });
 
-User.hasMany(Project, {
-  foreignKey: "user_id",
-  onDelete: "CASCADE",
-  onUpdate: "CASCADE",
-});
+// User.hasMany(Project, {
+//   foreignKey: "user_id",
+//   onDelete: "CASCADE",
+//   onUpdate: "CASCADE",
+// });
 
-Project.belongsTo(User, {
-  foreignKey: "user_id",
-});
+// Project.belongsTo(User, {
+//   foreignKey: "user_id",
+// });
 
-User.hasMany(Location, {
-  foreignKey: "user_id",
-  onDelete: "CASCADE",
-  onUpdate: "CASCADE",
-});
+// User.hasMany(Location, {
+//   foreignKey: "user_id",
+//   onDelete: "CASCADE",
+//   onUpdate: "CASCADE",
+// });
 
-Location.belongsTo(User, {
-  foreignKey: "user_id",
-});
+// Location.belongsTo(User, {
+//   foreignKey: "user_id",
+// });
 
-User.hasMany(LOC, {
-  foreignKey: "user_id",
-  onDelete: "CASCADE",
-  onUpdate: "CASCADE",
-});
+// User.hasMany(LOC, {
+//   foreignKey: "user_id",
+//   onDelete: "CASCADE",
+//   onUpdate: "CASCADE",
+// });
 
-LOC.belongsTo(User, {
-  foreignKey: "user_id",
-});
+// LOC.belongsTo(User, {
+//   foreignKey: "user_id",
+// });
 
 // User.beforeCreate(async (user, options) => {
 //   const hashedPassword = await user.hashPassword(user.password);

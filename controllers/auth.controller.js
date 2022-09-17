@@ -249,7 +249,7 @@ exports.UserLoginHandler = async (req, res) => {
     // }
 
     res.json({
-      user: _.pick(user, ["user_id", "fullName", "email", "role", "sup_id"]),
+      user: _.pick(user, ["user_id", "fullName", "email", "role"]),
       token,
     });
   } catch (e) {
