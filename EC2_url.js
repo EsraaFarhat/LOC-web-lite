@@ -1,1 +1,1 @@
-exports.EC2_URL = "http://63.33.18.108:5000";
+exports.EC2_URL = "https://api.loc.store";
