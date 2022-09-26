@@ -45,8 +45,7 @@ exports.getAllGlobalIdentifiersHandler = async (req, res) => {
           "GET"
         );
         return res.status(400).json({
-          error: "Cannot do this operation on the main server!",
-          reason: data.error,
+          error: "Cannot do this operation on the main server; " + data.error,
         });
       }
       await log(
@@ -132,8 +131,7 @@ exports.getProjectsForGlobalIdentifierHandler = async (req, res) => {
           "GET"
         );
         return res.status(400).json({
-          error: "Cannot do this operation on the main server!",
-          reason: data.error,
+          error: "Cannot do this operation on the main server; " + data.error,
         });
       }
       await log(

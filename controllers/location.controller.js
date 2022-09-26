@@ -59,8 +59,7 @@ exports.getLocationHandler = async (req, res) => {
           "GET"
         );
         return res.status(400).json({
-          error: "Cannot do this operation on the main server!",
-          reason: data.error,
+          error: "Cannot do this operation on the main server; " + data.error,
         });
       }
       await log(
@@ -545,7 +544,7 @@ exports.uploadLocationHandler = async (req, res) => {
       );
       return res
         .status(400)
-        .json({ error: `Couldn't upload locs`, reason: response.error });
+        .json({ error: `Couldn't upload locs; ` + response.error });
     } else {
       const { error } = await this.syncLOCs(LOCs, req.user.token);
 

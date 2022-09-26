@@ -215,8 +215,7 @@ exports.getLOCHandler = async (req, res) => {
           "GET"
         );
         return res.status(400).json({
-          error: "Cannot do this operation on the main server!",
-          reason: data.error,
+          error: "Cannot do this operation on the main server; " + data.error,
         });
       }
       await log(
@@ -324,8 +323,7 @@ exports.createLOCHandler = async (req, res) => {
           "POST"
         );
         return res.status(400).json({
-          error: "Cannot do this operation on the main server!",
-          reason: data.error,
+          error: "Cannot do this operation on the main server; " + data.error,
         });
       }
 
@@ -526,8 +524,7 @@ exports.updateLOCHandler = async (req, res) => {
           "PATCH"
         );
         return res.status(400).json({
-          error: "Cannot do this operation on the main server!",
-          reason: data.error,
+          error: "Cannot do this operation on the main server; " + data.error,
         });
       }
 

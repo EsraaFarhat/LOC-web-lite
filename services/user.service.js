@@ -116,8 +116,7 @@ exports.UserLoginToMainServerHandler = async (email, password) => {
     response = await response.json();
     if (response.error) {
       return {
-        error: `Couldn't login to the main server!`,
-        reason: response.error,
+        error: `Couldn't login to the main server; ` + response.error,
       };
     }
 
@@ -138,8 +137,7 @@ exports.updateUsersData = async (token) => {
     response = await response.json();
     if (response.error) {
       return {
-        error: `Couldn't update users' data!`,
-        reason: response.error,
+        error: `Couldn't update users' data; ` + response.error,
       };
     }
     let errors = [];

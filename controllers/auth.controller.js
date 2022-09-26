@@ -38,8 +38,7 @@ exports.LoginFromMain = async (req, error) => {
           );
           if (response.error) {
             return resolve({
-              error: response.error,
-              reason: response.reason,
+              error: response.error + "; " + response.reason,
             });
           } else {
             user = response.user;
@@ -151,9 +150,9 @@ exports.UserLoginHandler = async (req, res) => {
           `Failed to login user ${req.body.email}`,
           "POST"
         );
-        return res
-          .status(400)
-          .json({ error: result.error, reason: result.reason });
+        return res.status(400).json({
+          error: result.error + "; " + result.reason,
+        });
       }
       user = result;
       token = result.token;
