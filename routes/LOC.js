@@ -13,11 +13,11 @@ const {
   canGetLOC,
   canUpdate,
   canGetLocationForCreateLOC,
-  checkForTagsAvailability,
+  // checkForTagsAvailability,
 } = require("../middleware/LOC_permissions");
 const { canGetLocation } = require("../middleware/location_permissions");
 const {
-  checkIfUserSuspended,
+  // checkIfUserSuspended,
   isSaasAdminOrSuperAdminSuperUser,
 } = require("../middleware/users_permissions");
 
@@ -45,15 +45,23 @@ router.post(
   [
     auth,
     isSaasAdminOrSuperAdminSuperUser,
-    checkIfUserSuspended,
-    checkForTagsAvailability,
+    // checkIfUserSuspended,
+    // checkForTagsAvailability,
     canGetLocationForCreateLOC,
   ],
   createLOCHandler
 );
 
 // Update LOC By Id
-router.patch("/:id", [auth, checkIfUserSuspended, canUpdate], updateLOCHandler);
+router.patch(
+  "/:id",
+  [
+    auth,
+    // checkIfUserSuspended,
+    canUpdate,
+  ],
+  updateLOCHandler
+);
 
 // Upload .xlsx file
 router.post(
@@ -61,7 +69,7 @@ router.post(
   [
     auth,
     isSaasAdminOrSuperAdminSuperUser,
-    checkIfUserSuspended,
+    // checkIfUserSuspended,
     upload.single("LocFile"),
   ],
   uploadFileHandler

@@ -8,7 +8,7 @@ const {
 const {
   isSuperUser,
   canSuspend,
-  checkIfUserSuspended,
+  // checkIfUserSuspended,
   isUser,
 } = require("../middleware/users_permissions");
 
@@ -17,7 +17,12 @@ const router = express.Router();
 // Update the suspend status of a user
 router.patch(
   "/:id/suspend",
-  [auth, isUser, checkIfUserSuspended, canSuspend],
+  [
+    auth,
+    isUser,
+    // checkIfUserSuspended,
+    canSuspend,
+  ],
   updateUserStatusHandler
 );
 

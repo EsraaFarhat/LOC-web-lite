@@ -263,69 +263,69 @@ exports.canUpdate = async (req, res, next) => {
   }
 };
 
-exports.checkForTagsAvailability = async (req, res, next) => {
-  const gid = req.body.gid ? req.body.gid : null;
+// exports.checkForTagsAvailability = async (req, res, next) => {
+//   const gid = req.body.gid ? req.body.gid : null;
+//   try {
+//     if (req.user.role === "saas admin") {
+//       if (req.user.available_tags - 1 < -1000) {
+//         await log(
+//           req.user.user_id,
+//           req.user.email,
+//           gid,
+//           `Failed to create LOC ${req.body.route_id} (No tags available)`,
+//           "POST"
+//         );
 
-  try {
-    if (req.user.role === "saas admin") {
-      if (req.user.available_tags - 1 < -1000) {
-        await log(
-          req.user.user_id,
-          req.user.email,
-          gid,
-          `Failed to create LOC ${req.body.route_id} (No tags available)`,
-          "POST"
-        );
+//         return res
+//           .status(400)
+//           .json({ error: "No tags available. You need to buy more tags." });
+//       }
+//     } else if (req.user.role === "super admin") {
+//       if (req.user.available_tags <= 0) {
+//         await log(
+//           req.user.user_id,
+//           req.user.email,
+//           gid,
+//           `Failed to create LOC ${req.body.route_id} (No tags available)`,
+//           "POST"
+//         );
 
-        return res
-          .status(400)
-          .json({ error: "No tags available. You need to buy more tags." });
-      }
-    } else if (req.user.role === "super admin") {
-      if (req.user.available_tags <= 0) {
-        await log(
-          req.user.user_id,
-          req.user.email,
-          gid,
-          `Failed to create LOC ${req.body.route_id} (No tags available)`,
-          "POST"
-        );
+//         return res.status(400).json({
+//           error:
+//             "Not tags available. Contact accounts@keltechiot.com for more tags.",
+//         });
+//       }
+//     } else {
+//       let admin = await findUser({
+//         org_id: req.user.org_id,
+//         role: "super admin",
+//       });
+//       if (admin.available_tags <= 0) {
+//         await log(
+//           req.user.user_id,
+//           req.user.email,
+//           gid,
+//           `Failed to create LOC ${req.body.route_id} (No tags available)`,
+//           "POST"
+//         );
 
-        return res.status(400).json({
-          error:
-            "Not tags available. Contact accounts@keltechiot.com for more tags.",
-        });
-      }
-    } else {
-      let admin = await findUser({
-        org_id: req.user.org_id,
-        role: "super admin",
-      });
-      if (admin.available_tags <= 0) {
-        await log(
-          req.user.user_id,
-          req.user.email,
-          gid,
-          `Failed to create LOC ${req.body.route_id} (No tags available)`,
-          "POST"
-        );
+//         return res.status(400).json({
+//           error: "Not tags available. Contact you super user for more tags.",
+//         });
+//       }
 
-        return res.status(400).json({
-          error: "Not tags available. Contact you super user for more tags.",
-        });
-      }
+//       req.admin = admin;
+//     }
 
-      req.admin = admin;
-    }
-    next();
-  } catch (e) {
-    await log(
-      req.user.user_id,
-      req.user.email,
-      null,
-      `Failed to create LOC`,
-      "POST"
-    );
-    return res.status(500).json({ error: e.message });
-  }
-};
+//     next();
+//   } catch (e) {
+//     await log(
+//       req.user.user_id,
+//       req.user.email,
+//       null,
+//       `Failed to create LOC`,
+//       "POST"
+//     );
+//     return res.status(500).json({ error: e.message });
+//   }
+// };

@@ -119,67 +119,68 @@ exports.canSuspend = async (req, res, next) => {
   }
 };
 
-exports.checkIfUserSuspended = async (req, res, next) => {
-  try {
-    if (req.user.role === "super admin" && req.user.suspend) {
-      await log(
-        req.user.user_id,
-        req.user.email,
-        null,
-        `Couldn't complete the ${req.method} operation because user ${req.user.email} has been suspended!`,
-        "POST"
-      );
-      return res.status(403).json({
-        error:
-          "Couldn't complete this operation because you have been suspended!",
-      });
-    } else if (
-      req.user.role === "admin" ||
-      req.user.role === "super user" ||
-      req.user.role === "user"
-    ) {
-      if (req.user.suspend) {
-        await log(
-          req.user.user_id,
-          req.user.email,
-          null,
-          `Couldn't complete the ${req.method} operation because user ${req.user.email} has been suspended!`,
-          "POST"
-        );
-        return res.status(403).json({
-          error:
-            "Couldn't complete this operation because you have been suspended!",
-        });
-      } else {
-        const admin = await findUser({
-          org_id: req.user.org_id,
-          role: "super admin",
-        });
-        if (admin && admin.suspend) {
-          await log(
-            req.user.user_id,
-            req.user.email,
-            null,
-            `Couldn't complete the ${req.method} operation because user ${req.user.email} has been suspended!`,
-            "POST"
-          );
-          return res.status(403).json({
-            error:
-              "Couldn't complete this operation because you have been suspended!",
-          });
-        }
-      }
-    }
+// exports.checkIfUserSuspended = async (req, res, next) => {
+//   try {
+    
+//     if (req.user.role === "super admin" && req.user.suspend) {
+//       await log(
+//         req.user.user_id,
+//         req.user.email,
+//         null,
+//         `Couldn't complete the ${req.method} operation because user ${req.user.email} has been suspended!`,
+//         "POST"
+//       );
+//       return res.status(403).json({
+//         error:
+//           "Couldn't complete this operation because you have been suspended!",
+//       });
+//     } else if (
+//       req.user.role === "admin" ||
+//       req.user.role === "super user" ||
+//       req.user.role === "user"
+//     ) {
+//       if (req.user.suspend) {
+//         await log(
+//           req.user.user_id,
+//           req.user.email,
+//           null,
+//           `Couldn't complete the ${req.method} operation because user ${req.user.email} has been suspended!`,
+//           "POST"
+//         );
+//         return res.status(403).json({
+//           error:
+//             "Couldn't complete this operation because you have been suspended!",
+//         });
+//       } else {
+//         const admin = await findUser({
+//           org_id: req.user.org_id,
+//           role: "super admin",
+//         });
+//         if (admin && admin.suspend) {
+//           await log(
+//             req.user.user_id,
+//             req.user.email,
+//             null,
+//             `Couldn't complete the ${req.method} operation because user ${req.user.email} has been suspended!`,
+//             "POST"
+//           );
+//           return res.status(403).json({
+//             error:
+//               "Couldn't complete this operation because you have been suspended!",
+//           });
+//         }
+//       }
+//     }
 
-    next();
-  } catch (e) {
-    await log(
-      req.user.user_id,
-      req.user.email,
-      null,
-      `Couldn't complete the ${req.method} operation`,
-      "POST"
-    );
-    return res.status(500).json({ error: e.message });
-  }
-};
+//     next();
+//   } catch (e) {
+//     await log(
+//       req.user.user_id,
+//       req.user.email,
+//       null,
+//       `Couldn't complete the ${req.method} operation`,
+//       "POST"
+//     );
+//     return res.status(500).json({ error: e.message });
+//   }
+// };

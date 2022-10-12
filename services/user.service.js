@@ -11,9 +11,11 @@ require("dotenv").config();
 const User = require("../models/user");
 const { EC2_URL } = require("../EC2_url");
 
-exports.findUser = async (email) => {
+exports.findUser = async (filter) => {
   try {
-    const user = await User.findOne({ where: { email } });
+    const user = await User.findOne({
+      where: filter,
+    });
 
     return user;
   } catch (e) {
@@ -24,7 +26,7 @@ exports.findUser = async (email) => {
 // For Login
 exports.findUserByCredentials = async (email, password) => {
   try {
-    const user = await this.findUser(email);
+    const user = await this.findUser({ email });
     if (!user) throw new Error("Invalid email or password!");
     const isMatch = await bcrypt.compare(password, user.password);
     // console.log(isMatch);
@@ -146,7 +148,7 @@ exports.updateUsersData = async (token) => {
       let local_user = await this.findUserById(user.user_id);
       if (!local_user) {
         try {
-          let user_with_email = await this.findUser(user.email);
+          let user_with_email = await this.findUser({ email: user.email });
           if (user_with_email) await this.deleteUser(user_with_email.user_id);
           try {
             await this.createUser(user);
@@ -159,7 +161,7 @@ exports.updateUsersData = async (token) => {
         }
       } else {
         try {
-          let user_with_email = await this.findUser(user.email);
+          let user_with_email = await this.findUser({ email: user.email });
           if (user_with_email && user_with_email.user_id !== local_user.user_id)
             await this.deleteUser(user_with_email.user_id);
           try {

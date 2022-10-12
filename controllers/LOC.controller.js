@@ -302,6 +302,7 @@ exports.getLOCHandler = async (req, res) => {
 
 exports.createLOCHandler = async (req, res) => {
   const gid = req.body.gid ? req.body.gid : null;
+
   try {
     //            ****************Main server*****************
     if (req.query.mode === "main") {
@@ -351,6 +352,7 @@ exports.createLOCHandler = async (req, res) => {
 
   //            ****************Local server*****************
   try {
+
     const locBody = {
       route_id: req.body.route_id,
       origin: req.body.origin,
@@ -372,6 +374,7 @@ exports.createLOCHandler = async (req, res) => {
       radius: req.body.radius,
       destination_status: req.body.destination_status,
     };
+
     // validate the request
     const { error } = validateLOC(locBody);
     if (error) {

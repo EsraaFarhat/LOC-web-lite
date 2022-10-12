@@ -47,6 +47,57 @@ exports.LoginFromMain = async (req, error) => {
                 error: "You have no access to the web lite!",
               });
             }
+            if (user.role === "super admin" && user.suspend) {
+              await log(
+                user.user_id,
+                user.email,
+                null,
+                `User ${user.email} failed to logged in (suspended)`,
+                "POST"
+              );
+              return resolve({
+                error:
+                  "Can't login; you have been suspended, return to admin for more details...",
+              });
+            }
+            if (
+              user.role === "admin" ||
+              user.role === "super user" ||
+              user.role === "user"
+            ) {
+              if (user.suspend) {
+                await log(
+                  user.user_id,
+                  user.email,
+                  null,
+                  `User ${user.email} failed to logged in (suspended)`,
+                  "POST"
+                );
+                return resolve({
+                  error:
+                    "Can't login; you have been suspended, return to admin for more details...",
+                });
+              } else {
+                const admin = await findUser({
+                  org_id: user.org_id,
+                  role: "super admin",
+                });
+
+                if (admin && admin.suspend) {
+                  await log(
+                    user.user_id,
+                    user.email,
+                    null,
+                    `User ${user.email} failed to logged in (suspended)`,
+                    "POST"
+                  );
+                  return resolve({
+                    error:
+                      "Can't login; your super admin have been suspended, return to super admin for more details...",
+                  });
+                }
+              }
+            }
             // console.log(user);
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(req.body.password, salt);
@@ -90,7 +141,7 @@ exports.LoginFromMain = async (req, error) => {
             }
             // }
             // If the password change
-            let oldUser = await findUser(user.email);
+            let oldUser = await findUser({ email: user.email });
             if (oldUser) await updateUser(oldUser.user_id, user);
             else await createUser(user);
             resolve(user);
@@ -138,6 +189,53 @@ exports.UserLoginHandler = async (req, res) => {
         return res
           .status(400)
           .json({ error: "You have no access to the web lite!" });
+      }
+      if (user.role === "super admin" && user.suspend) {
+        await log(
+          user.user_id,
+          user.email,
+          null,
+          `User ${user.email} failed to logged in (suspended)`,
+          "POST"
+        );
+        return res.status(403).json({
+          error:
+            "Can't login; you have been suspended, return to admin for more details...",
+        });
+      }
+      if (user.role === "super user" || user.role === "user") {
+        if (user.suspend) {
+          await log(
+            user.user_id,
+            user.email,
+            null,
+            `User ${user.email} failed to logged in (suspended)`,
+            "POST"
+          );
+          return res.status(403).json({
+            error:
+              "Can't login; you have been suspended, return to admin for more details...",
+          });
+        } else {
+          const admin = await findUser({
+            org_id: user.org_id,
+            role: "super admin",
+          });
+
+          if (admin && admin.suspend) {
+            await log(
+              user.user_id,
+              user.email,
+              null,
+              `User ${user.email} failed to logged in (suspended)`,
+              "POST"
+            );
+            return res.status(403).json({
+              error:
+                "Can't login; your super admin have been suspended, return to super admin for more details...",
+            });
+          }
+        }
       }
       token = await generateAuthToken(user);
     } else if (err) {
